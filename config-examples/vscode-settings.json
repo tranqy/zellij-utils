@@ -1,0 +1,59 @@
+{
+    "terminal.integrated.defaultProfile.linux": "bash-zellij",
+    "terminal.integrated.defaultProfile.osx": "bash-zellij",
+    
+    "terminal.integrated.profiles.linux": {
+        "bash-zellij": {
+            "path": "bash",
+            "args": [
+                "-c",
+                "source ~/.config/shell/zellij-utils.sh && zj; exec bash"
+            ]
+        },
+        "bash": {
+            "path": "bash"
+        }
+    },
+    
+    "terminal.integrated.profiles.osx": {
+        "bash-zellij": {
+            "path": "bash",
+            "args": [
+                "-c", 
+                "source ~/.config/shell/zellij-utils.sh && zj; exec bash"
+            ]
+        },
+        "zsh-zellij": {
+            "path": "zsh",
+            "args": [
+                "-c",
+                "source ~/.config/shell/zellij-utils.sh && zj; exec zsh"
+            ]
+        },
+        "bash": {
+            "path": "bash"
+        },
+        "zsh": {
+            "path": "zsh"
+        }
+    },
+    
+    "terminal.integrated.env.linux": {
+        "ZELLIJ_AUTO_START": "true"
+    },
+    
+    "terminal.integrated.env.osx": {
+        "ZELLIJ_AUTO_START": "true"
+    },
+    
+    // Optional: Disable VS Code's built-in terminal tabs if using zellij
+    "terminal.integrated.tabs.enabled": false,
+    
+    // Optional: Set terminal font for better zellij experience
+    "terminal.integrated.fontFamily": "'FiraCode Nerd Font', 'Cascadia Code', monospace",
+    "terminal.integrated.fontSize": 14,
+    
+    // Optional: Terminal cursor style
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.cursorStyle": "line"
+}
