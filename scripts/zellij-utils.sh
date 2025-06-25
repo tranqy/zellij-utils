@@ -282,8 +282,8 @@ zjf() {
 
 # Auto-start function (call this from your bashrc)
 zj_auto() {
-    # Only auto-start in interactive shells, not already in zellij, and not in VS Code
-    if [[ -z "$ZELLIJ" && -z "$VSCODE_INJECTION" && $- == *i* ]]; then
+    # Only auto-start in interactive shells and not already in zellij
+    if [[ -z "$ZELLIJ" && $- == *i* ]]; then
         # Don't auto-start if we're in a SSH session and ZJ_NO_AUTO is set
         if [[ -n "$SSH_CONNECTION" ]] && [[ -n "$ZJ_NO_AUTO" ]]; then
             return 0
