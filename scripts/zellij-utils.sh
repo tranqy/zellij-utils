@@ -37,7 +37,7 @@ zj() {
     session_name=$(echo "$session_name" | tr -cd '[:alnum:]_-' | tr '[:upper:]' '[:lower:]')
     [[ -z "$session_name" ]] && session_name="default"
     
-    if zellij list-sessions 2>/dev/null | grep -q "^$session_name"; then
+    if zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$session_name\b"; then
         echo "📎 Attaching to existing session: $session_name"
         zellij attach "$session_name"
     else
@@ -95,7 +95,7 @@ zjs() {
         return 1
     fi
     
-    if zellij list-sessions 2>/dev/null | grep -q "^$session_name"; then
+    if zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$session_name\b"; then
         echo "🔄 Switching to session: $session_name"
         zellij attach "$session_name"
     else
