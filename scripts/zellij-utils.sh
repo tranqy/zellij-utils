@@ -6,36 +6,82 @@
 # SESSION MANAGEMENT
 # =============================================================================
 
+# Load session naming configuration
+_load_session_config() {
+    local config_file="$HOME/.config/zellij/session-naming.conf"
+    
+    # Default values
+    PROJECT_MARKERS=("package.json" "Cargo.toml" "go.mod" ".git" "pyproject.toml" "composer.json" "Makefile" "CMakeLists.txt")
+    SPECIAL_DIRS=("/:root" "$HOME:home" "$HOME/.config/*:config" "$HOME/Documents/*:docs")
+    USE_GIT_REPO_NAME=true
+    DEFAULT_SESSION_NAME="default"
+    LOWERCASE_NAMES=true
+    SANITIZE_NAMES=true
+    
+    # Load config if it exists
+    if [[ -f "$config_file" ]]; then
+        source "$config_file"
+    fi
+}
+
 # Enhanced session creation/attachment with smart naming
 zj() {
     local session_name="$1"
     local layout="$2"
     
     if [[ -z "$session_name" ]]; then
+        _load_session_config
+        
         # Check for project markers first
-        if [[ -f "package.json" ]] || [[ -f "Cargo.toml" ]] || [[ -f "go.mod" ]] || [[ -d ".git" ]]; then
-            # Use git repo name if available
-            if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        local has_project_marker=false
+        for marker in "${PROJECT_MARKERS[@]}"; do
+            if [[ -f "$marker" ]] || [[ -d "$marker" ]]; then
+                has_project_marker=true
+                break
+            fi
+        done
+        
+        if [[ "$has_project_marker" == true ]]; then
+            # Use git repo name if available and enabled
+            if [[ "$USE_GIT_REPO_NAME" == true ]] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
                 session_name=$(basename "$(git rev-parse --show-toplevel)")
             else
                 session_name=$(basename "$PWD")
             fi
-        elif [[ "$PWD" == "$HOME" ]]; then
-            session_name="home"
-        elif [[ "$PWD" == "/" ]]; then
-            session_name="root"
-        elif [[ "$PWD" == "$HOME"/.config/* ]]; then
-            session_name="config"
-        elif [[ "$PWD" == "$HOME"/Documents/* ]]; then
-            session_name="docs"
         else
-            session_name=$(basename "$PWD")
+            # Check special directories
+            local matched=false
+            for dir_mapping in "${SPECIAL_DIRS[@]}"; do
+                local pattern="${dir_mapping%:*}"
+                local name="${dir_mapping#*:}"
+                
+                # Expand variables in pattern
+                pattern=$(eval echo "$pattern")
+                
+                if [[ "$PWD" == $pattern ]]; then
+                    session_name="$name"
+                    matched=true
+                    break
+                fi
+            done
+            
+            # Default to directory basename
+            if [[ "$matched" == false ]]; then
+                session_name=$(basename "$PWD")
+            fi
         fi
     fi
     
-    # Sanitize session name
-    session_name=$(echo "$session_name" | tr -cd '[:alnum:]_-' | tr '[:upper:]' '[:lower:]')
-    [[ -z "$session_name" ]] && session_name="default"
+    # Apply transformations
+    if [[ "$SANITIZE_NAMES" == true ]]; then
+        session_name=$(echo "$session_name" | tr -cd '[:alnum:]_-')
+    fi
+    
+    if [[ "$LOWERCASE_NAMES" == true ]]; then
+        session_name=$(echo "$session_name" | tr '[:upper:]' '[:lower:]')
+    fi
+    
+    [[ -z "$session_name" ]] && session_name="$DEFAULT_SESSION_NAME"
     
     if zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$session_name\b"; then
         echo "📎 Attaching to existing session: $session_name"
@@ -105,32 +151,14 @@ zjs() {
 }
 
 # =============================================================================
-# QUICK NAVIGATION & CREATION
+# SESSION CREATION
 # =============================================================================
-
-# Quick session for common directories
-zjh() { cd "$HOME" && zj home; }           # Home session
-zjc() { cd "$HOME/.config" && zj config; } # Config session
-zjd() { cd "$HOME/Documents" && zj docs; } # Documents session
 
 # Create session with specific layout for development
 zjdev() {
     local project_name="${1:-dev}"
     local layout="${2:-dev}"
     zj "$project_name" "$layout"
-}
-
-# Quick session for current git project
-zjgit() {
-    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        echo "❌ Not in a git repository"
-        return 1
-    fi
-    
-    local repo_root=$(git rev-parse --show-toplevel)
-    local repo_name=$(basename "$repo_root")
-    cd "$repo_root"
-    zj "$repo_name"
 }
 
 # =============================================================================
@@ -186,17 +214,6 @@ zjwork() {
     fi
 }
 
-# Quick session for dotfiles management
-zjdot() {
-    local dotfiles_dir="${DOTFILES_DIR:-$HOME/.dotfiles}"
-    if [[ -d "$dotfiles_dir" ]]; then
-        cd "$dotfiles_dir"
-        zj "dotfiles"
-    else
-        echo "❌ Dotfiles directory not found at $dotfiles_dir"
-        echo "Set DOTFILES_DIR environment variable or create ~/.dotfiles"
-    fi
-}
 
 # =============================================================================
 # MONITORING & UTILITIES
@@ -308,8 +325,6 @@ alias zkill='zjk'
 alias zswitch='zjs'
 alias zinfo='zjinfo'
 
-# Quick project navigation with session creation
-alias proj='zjgit'
 
 # =============================================================================
 # COMPLETION (optional)
