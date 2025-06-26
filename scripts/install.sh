@@ -41,16 +41,27 @@ mkdir -p "$SHELL_CONFIG_DIR"
 mkdir -p "$ZELLIJ_CONFIG_DIR/layouts"
 mkdir -p "$ZELLIJ_CONFIG_DIR/saved-sessions"
 
-# Copy main script
+# Copy appropriate script based on shell
 print_info "Installing zellij-utils script..."
-cp "$PROJECT_DIR/scripts/zellij-utils.sh" "$SHELL_CONFIG_DIR/"
+SHELL_NAME=$(basename "$SHELL")
+if [[ "$SHELL_NAME" == "zsh" ]]; then
+    cp "$PROJECT_DIR/scripts/zellij-utils-zsh.sh" "$SHELL_CONFIG_DIR/zellij-utils.sh"
+    print_success "Zsh-compatible script installed to $SHELL_CONFIG_DIR/zellij-utils.sh"
+else
+    cp "$PROJECT_DIR/scripts/zellij-utils.sh" "$SHELL_CONFIG_DIR/"
+    print_success "Bash script installed to $SHELL_CONFIG_DIR/zellij-utils.sh"
+fi
 chmod +x "$SHELL_CONFIG_DIR/zellij-utils.sh"
-print_success "Script installed to $SHELL_CONFIG_DIR/zellij-utils.sh"
 
 # Copy layouts
 print_info "Installing layouts..."
 cp "$PROJECT_DIR/layouts/"* "$ZELLIJ_CONFIG_DIR/layouts/"
 print_success "Layouts installed to $ZELLIJ_CONFIG_DIR/layouts/"
+
+# Copy session naming configuration
+print_info "Installing session naming configuration..."
+cp "$PROJECT_DIR/config/session-naming.conf" "$ZELLIJ_CONFIG_DIR/"
+print_success "Session naming config installed to $ZELLIJ_CONFIG_DIR/session-naming.conf"
 
 # Copy config if it doesn't exist
 if [[ ! -f "$ZELLIJ_CONFIG_DIR/config.kdl" ]]; then
@@ -112,7 +123,6 @@ echo "  zj [name] [layout] - Create/attach session"
 echo "  zjl                - List sessions"
 echo "  zjk <name>         - Kill session"
 echo "  zjwork [name]      - Development workspace"
-echo "  zjgit              - Git project session"
 echo "  zjinfo             - Session info"
 echo ""
 print_info "For more help, check the README.md file"
