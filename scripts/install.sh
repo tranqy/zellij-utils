@@ -53,15 +53,25 @@ else
 fi
 chmod +x "$SHELL_CONFIG_DIR/zellij-utils.sh"
 
-# Copy layouts
+# Copy layouts with error handling
 print_info "Installing layouts..."
-cp "$PROJECT_DIR/layouts/"* "$ZELLIJ_CONFIG_DIR/layouts/"
+if ! cp "$PROJECT_DIR/layouts/"* "$ZELLIJ_CONFIG_DIR/layouts/" 2>/dev/null; then
+    print_error "Failed to install layouts"
+    exit 1
+fi
 print_success "Layouts installed to $ZELLIJ_CONFIG_DIR/layouts/"
 
 # Copy session naming configuration
 print_info "Installing session naming configuration..."
-cp "$PROJECT_DIR/config/session-naming.conf" "$ZELLIJ_CONFIG_DIR/"
-print_success "Session naming config installed to $ZELLIJ_CONFIG_DIR/session-naming.conf"
+if [[ -f "$PROJECT_DIR/config/session-naming.conf" ]]; then
+    if ! cp "$PROJECT_DIR/config/session-naming.conf" "$ZELLIJ_CONFIG_DIR/"; then
+        print_error "Failed to install session naming configuration"
+        exit 1
+    fi
+    print_success "Session naming config installed to $ZELLIJ_CONFIG_DIR/session-naming.conf"
+else
+    print_info "Session naming config not found, skipping..."
+fi
 
 # Copy config if it doesn't exist
 if [[ ! -f "$ZELLIJ_CONFIG_DIR/config.kdl" ]]; then

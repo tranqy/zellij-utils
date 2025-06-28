@@ -3,6 +3,97 @@
 # Source this file in your bashrc: source ~/path/to/zellij-utils.sh
 
 # =============================================================================
+# CACHING SYSTEM
+# =============================================================================
+
+# Cache variables for performance optimization
+declare -A _ZJ_GIT_CACHE=()
+declare -A _ZJ_SESSION_CACHE=()
+_ZJ_CACHE_TTL=60  # Cache TTL in seconds
+
+# Clear expired cache entries
+_zj_clear_expired_cache() {
+    local current_time=$(date +%s)
+    local cache_key
+    
+    # Clear git cache
+    for cache_key in "${!_ZJ_GIT_CACHE[@]}"; do
+        local cache_data="${_ZJ_GIT_CACHE[$cache_key]}"
+        local cache_time="${cache_data##*:}"
+        if [[ $((current_time - cache_time)) -gt $_ZJ_CACHE_TTL ]]; then
+            unset _ZJ_GIT_CACHE["$cache_key"]
+        fi
+    done
+    
+    # Clear session cache
+    for cache_key in "${!_ZJ_SESSION_CACHE[@]}"; do
+        local cache_time="${_ZJ_SESSION_CACHE[$cache_key]##*:}"
+        if [[ $((current_time - cache_time)) -gt $_ZJ_CACHE_TTL ]]; then
+            unset _ZJ_SESSION_CACHE["$cache_key"]
+        fi
+    done
+}
+
+# Get cached git repo info or compute and cache it
+_zj_get_git_info() {
+    local pwd_key="$PWD"
+    local current_time=$(date +%s)
+    
+    # Check cache first
+    if [[ -n "${_ZJ_GIT_CACHE[$pwd_key]}" ]]; then
+        local cache_data="${_ZJ_GIT_CACHE[$pwd_key]}"
+        local cache_time="${cache_data##*:}"
+        
+        if [[ $((current_time - cache_time)) -le $_ZJ_CACHE_TTL ]]; then
+            # Cache hit - return cached result
+            echo "${cache_data%:*}"
+            return 0
+        fi
+    fi
+    
+    # Cache miss - compute git info
+    local git_result=""
+    if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        local repo_root
+        if repo_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+            git_result="$(basename "$repo_root")"
+        fi
+    fi
+    
+    # Cache the result
+    _ZJ_GIT_CACHE["$pwd_key"]="$git_result:$current_time"
+    echo "$git_result"
+}
+
+# Get cached session list or fetch and cache it
+_zj_get_session_list() {
+    local current_time=$(date +%s)
+    local cache_key="sessions"
+    
+    # Check cache first
+    if [[ -n "${_ZJ_SESSION_CACHE[$cache_key]}" ]]; then
+        local cache_data="${_ZJ_SESSION_CACHE[$cache_key]}"
+        local cache_time="${cache_data##*:}"
+        
+        if [[ $((current_time - cache_time)) -le $_ZJ_CACHE_TTL ]]; then
+            # Cache hit - return cached result
+            echo "${cache_data%:*}"
+            return 0
+        fi
+    fi
+    
+    # Cache miss - fetch session list
+    local session_list=""
+    if session_list=$(zellij list-sessions 2>/dev/null); then
+        # Cache the result
+        _ZJ_SESSION_CACHE["$cache_key"]="$session_list:$current_time"  
+        echo "$session_list"
+    else
+        return 1
+    fi
+}
+
+# =============================================================================
 # SESSION MANAGEMENT
 # =============================================================================
 
@@ -43,8 +134,14 @@ zj() {
         
         if [[ "$has_project_marker" == true ]]; then
             # Use git repo name if available and enabled
-            if [[ "$USE_GIT_REPO_NAME" == true ]] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-                session_name=$(basename "$(git rev-parse --show-toplevel)")
+            if [[ "$USE_GIT_REPO_NAME" == true ]]; then
+                local git_repo_name
+                git_repo_name=$(_zj_get_git_info)
+                if [[ -n "$git_repo_name" ]]; then
+                    session_name="$git_repo_name"
+                else
+                    session_name=$(basename "$PWD")
+                fi
             else
                 session_name=$(basename "$PWD")
             fi
@@ -55,8 +152,10 @@ zj() {
                 local pattern="${dir_mapping%:*}"
                 local name="${dir_mapping#*:}"
                 
-                # Expand variables in pattern
-                pattern=$(eval echo "$pattern")
+                # Safely expand variables in pattern
+                # Only expand $HOME and $USER variables to prevent injection
+                pattern="${pattern//\$HOME/$HOME}"
+                pattern="${pattern//\$USER/$USER}"
                 
                 if [[ "$PWD" == $pattern ]]; then
                     session_name="$name"
@@ -72,6 +171,18 @@ zj() {
         fi
     fi
     
+    # Validate and sanitize session name
+    if [[ -z "$session_name" ]]; then
+        echo "Error: Session name cannot be empty" >&2
+        return 1
+    fi
+    
+    # Check for dangerous characters
+    if [[ "$session_name" =~ [[:space:]\;\|\&\$\`\(\)] ]]; then
+        echo "Error: Session name contains invalid characters" >&2
+        return 1
+    fi
+    
     # Apply transformations
     if [[ "$SANITIZE_NAMES" == true ]]; then
         session_name=$(echo "$session_name" | tr -cd '[:alnum:]_-')
@@ -81,21 +192,53 @@ zj() {
         session_name=$(echo "$session_name" | tr '[:upper:]' '[:lower:]')
     fi
     
+    # Final length check
+    if [[ ${#session_name} -gt 50 ]]; then
+        echo "Error: Session name too long (max 50 characters)" >&2
+        return 1
+    fi
+    
     [[ -z "$session_name" ]] && session_name="$DEFAULT_SESSION_NAME"
     
-    if zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$session_name\b"; then
+    # Check if zellij is available
+    if ! command -v zellij >/dev/null 2>&1; then
+        echo "Error: zellij is not installed or not in PATH" >&2
+        return 1
+    fi
+    
+    # Clear expired cache entries
+    _zj_clear_expired_cache
+    
+    # Check if session exists
+    local session_list
+    if ! session_list=$(_zj_get_session_list); then
+        echo "Error: Failed to list zellij sessions" >&2
+        return 1
+    fi
+    
+    if echo "$session_list" | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$session_name\b"; then
         echo "📎 Attaching to existing session: $session_name"
-        zellij attach "$session_name"
+        if ! zellij attach "$session_name"; then
+            echo "Error: Failed to attach to session '$session_name'" >&2
+            return 1
+        fi
     else
         echo "✨ Creating new session: $session_name"
-        zellij --session "$session_name" ${layout:+--layout "$layout"}
+        if ! zellij --session "$session_name" ${layout:+--layout "$layout"}; then
+            echo "Error: Failed to create session '$session_name'" >&2
+            return 1
+        fi
     fi
 }
 
 # List all sessions with status
 zjl() {
     echo "📋 Active zellij sessions:"
-    if ! zellij list-sessions 2>/dev/null; then
+    _zj_clear_expired_cache
+    local session_list
+    if session_list=$(_zj_get_session_list); then
+        echo "$session_list"
+    else
         echo "   No active sessions"
     fi
 }
@@ -117,17 +260,48 @@ zjk() {
 # Kill all sessions except current
 zjka() {
     local current_session="${ZELLIJ_SESSION_NAME:-}"
-    local sessions=$(zellij list-sessions 2>/dev/null | grep -v "^$current_session$")
+    _zj_clear_expired_cache
+    local all_sessions sessions
+    if ! all_sessions=$(_zj_get_session_list); then
+        echo "❌ Error: Failed to get session list" >&2
+        return 1
+    fi
+    # Parse and filter sessions more reliably
+    local session_array=()
+    while IFS= read -r line; do
+        [[ -n "$line" ]] || continue
+        # Remove ANSI color codes and extract session name (first word)
+        local clean_line=$(echo "$line" | sed 's/\x1b\[[0-9;]*m//g')
+        local session_name=$(echo "$clean_line" | awk '{print $1}')
+        
+        # Skip current session (exact match)
+        if [[ "$session_name" != "$current_session" ]]; then
+            session_array+=("$session_name")
+        fi
+    done <<< "$all_sessions"
     
-    if [[ -z "$sessions" ]]; then
+    if [[ ${#session_array[@]} -eq 0 ]]; then
         echo "No other sessions to kill"
         return 0
     fi
     
-    echo "🗑️  Killing all sessions except: $current_session"
-    echo "$sessions" | while read -r session; do
-        [[ -n "$session" ]] && zellij kill-session "$session"
+    echo "🗑️  Killing ${#session_array[@]} session(s) except: $current_session"
+    local failed=0
+    for session in "${session_array[@]}"; do
+        if [[ -n "$session" ]]; then
+            echo "  Killing session: $session"
+            if ! zellij kill-session "$session" 2>/dev/null; then
+                echo "  ⚠️  Failed to kill session: $session" >&2
+                ((failed++))
+            fi
+        fi
     done
+    
+    if [[ $failed -gt 0 ]]; then
+        echo "⚠️  Warning: $failed session(s) could not be killed" >&2
+    else
+        echo "✅ All other sessions killed successfully"
+    fi
 }
 
 # Switch to another session (detach from current, attach to new)
@@ -141,7 +315,9 @@ zjs() {
         return 1
     fi
     
-    if zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$session_name\b"; then
+    _zj_clear_expired_cache
+    local session_list
+    if session_list=$(_zj_get_session_list) && echo "$session_list" | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$session_name\b"; then
         echo "🔄 Switching to session: $session_name"
         zellij attach "$session_name"
     else
@@ -158,7 +334,91 @@ zjs() {
 zjdev() {
     local project_name="${1:-dev}"
     local layout="${2:-dev}"
+    
+    # Validate layout parameter if provided
+    if [[ -n "$layout" ]] && [[ ! "$layout" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo "❌ Error: Invalid layout name '$layout'" >&2
+        echo "   Layout names must contain only letters, numbers, hyphens, and underscores" >&2
+        return 1
+    fi
+    
     zj "$project_name" "$layout"
+}
+
+# =============================================================================
+# QUICK NAVIGATION & CREATION
+# =============================================================================
+
+# Quick session for common directories with path validation
+zjh() { 
+    if [[ ! -d "$HOME" ]]; then
+        echo "❌ Error: Home directory '$HOME' not accessible" >&2
+        return 1
+    fi
+    cd "$HOME" && zj home
+}
+
+zjc() { 
+    local config_dir="$HOME/.config"
+    if [[ ! -d "$config_dir" ]]; then
+        echo "❌ Error: Config directory '$config_dir' not found" >&2
+        return 1
+    fi
+    cd "$config_dir" && zj config
+}
+
+zjd() { 
+    local docs_dir="$HOME/Documents"
+    if [[ ! -d "$docs_dir" ]]; then
+        echo "❌ Error: Documents directory '$docs_dir' not found" >&2
+        return 1
+    fi
+    cd "$docs_dir" && zj docs
+}
+
+# Quick session for current git project
+zjgit() {
+    if ! command -v git >/dev/null 2>&1; then
+        echo "❌ Error: git command not found" >&2
+        return 1
+    fi
+    
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "❌ Error: Not in a git repository" >&2
+        return 1
+    fi
+    
+    local repo_root
+    if ! repo_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+        echo "❌ Error: Failed to get git repository root" >&2
+        return 1
+    fi
+    
+    if [[ ! -d "$repo_root" ]]; then
+        echo "❌ Error: Repository root '$repo_root' not accessible" >&2
+        return 1
+    fi
+    
+    local repo_name=$(basename "$repo_root")
+    cd "$repo_root" && zj "$repo_name"
+}
+
+# Quick session for dotfiles management
+zjdot() {
+    local dotfiles_dir="${DOTFILES_DIR:-$HOME/.dotfiles}"
+    
+    if [[ ! -d "$dotfiles_dir" ]]; then
+        echo "❌ Error: Dotfiles directory not found at '$dotfiles_dir'" >&2
+        echo "   Set DOTFILES_DIR environment variable or create ~/.dotfiles" >&2
+        return 1
+    fi
+    
+    if [[ ! -r "$dotfiles_dir" ]]; then
+        echo "❌ Error: Dotfiles directory '$dotfiles_dir' not readable" >&2
+        return 1
+    fi
+    
+    cd "$dotfiles_dir" && zj "dotfiles"
 }
 
 # =============================================================================
@@ -197,20 +457,56 @@ zjsaved() {
 zjwork() {
     local project_name="${1:-$(basename "$PWD")}"
     
+    # Validate session name
+    if [[ ! "$project_name" =~ ^[a-zA-Z0-9_-]+$ ]] || [[ ${#project_name} -gt 50 ]]; then
+        echo "❌ Error: Invalid session name '$project_name'" >&2
+        echo "   Session names must contain only letters, numbers, hyphens, and underscores (max 50 chars)" >&2
+        return 1
+    fi
+    
+    # Check if zellij is available
+    if ! command -v zellij >/dev/null 2>&1; then
+        echo "❌ Error: zellij command not found. Please install zellij first." >&2
+        return 1
+    fi
+    
     # Create session if it doesn't exist
-    if ! zellij list-sessions 2>/dev/null | grep -q "^$project_name"; then
+    _zj_clear_expired_cache
+    local session_list
+    if ! session_list=$(_zj_get_session_list) || ! echo "$session_list" | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$project_name\b"; then
         echo "🚀 Setting up development workspace: $project_name"
-        zj "$project_name"
         
-        # Add new panes and tabs (you can customize this)
+        # Create initial session
+        if ! zj "$project_name"; then
+            echo "❌ Error: Failed to create session '$project_name'" >&2
+            return 1
+        fi
+        
+        # Add new panes and tabs with error handling
         sleep 1
-        zellij action new-pane --direction down
-        zellij action new-tab --name "editor"
-        zellij action new-tab --name "server"
-        zellij action go-to-tab 1
+        if ! zellij action new-pane --direction down 2>/dev/null; then
+            echo "⚠️  Warning: Failed to create bottom pane" >&2
+        fi
+        
+        if ! zellij action new-tab --name "editor" 2>/dev/null; then
+            echo "⚠️  Warning: Failed to create editor tab" >&2
+        fi
+        
+        if ! zellij action new-tab --name "server" 2>/dev/null; then
+            echo "⚠️  Warning: Failed to create server tab" >&2
+        fi
+        
+        if ! zellij action go-to-tab 1 2>/dev/null; then
+            echo "⚠️  Warning: Failed to switch to first tab" >&2
+        fi
+        
+        echo "✅ Development workspace '$project_name' setup complete"
     else
         echo "📎 Attaching to existing workspace: $project_name"
-        zj "$project_name"
+        if ! zj "$project_name"; then
+            echo "❌ Error: Failed to attach to session '$project_name'" >&2
+            return 1
+        fi
     fi
 }
 
@@ -287,7 +583,14 @@ zjf() {
         return 1
     fi
     
-    local session=$(zellij list-sessions 2>/dev/null | fzf --prompt="Select session: " --height=10)
+    _zj_clear_expired_cache
+    local session_list
+    if ! session_list=$(_zj_get_session_list); then
+        echo "❌ Error: Failed to get session list" >&2
+        return 1
+    fi
+    
+    local session=$(echo "$session_list" | fzf --prompt="Select session: " --height=10)
     if [[ -n "$session" ]]; then
         zj "$session"
     fi
@@ -332,8 +635,13 @@ alias zinfo='zjinfo'
 
 # Basic completion for session names
 _zellij_sessions() {
-    local sessions=$(zellij list-sessions 2>/dev/null)
-    COMPREPLY=($(compgen -W "$sessions" -- "${COMP_WORDS[COMP_CWORD]}"))
+    _zj_clear_expired_cache
+    local sessions
+    if sessions=$(_zj_get_session_list 2>/dev/null); then
+        COMPREPLY=($(compgen -W "$sessions" -- "${COMP_WORDS[COMP_CWORD]}"))
+    else
+        COMPREPLY=()
+    fi
 }
 
 # Register completions

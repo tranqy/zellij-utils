@@ -33,16 +33,54 @@ zj() {
         fi
     fi
     
+    # Validate and sanitize session name
+    if [[ -z "$session_name" ]]; then
+        echo "Error: Session name cannot be empty" >&2
+        return 1
+    fi
+    
+    # Check for dangerous characters
+    if [[ "$session_name" =~ [[:space:]\;\|\&\$\`\(\)] ]]; then
+        echo "Error: Session name contains invalid characters" >&2
+        return 1
+    fi
+    
     # Sanitize session name
     session_name=$(echo "$session_name" | tr -cd '[:alnum:]_-' | tr '[:upper:]' '[:lower:]')
+    
+    # Final length check
+    if [[ ${#session_name} -gt 50 ]]; then
+        echo "Error: Session name too long (max 50 characters)" >&2
+        return 1
+    fi
+    
     [[ -z "$session_name" ]] && session_name="default"
     
-    if zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$session_name\b"; then
+    # Check if zellij is available
+    if ! command -v zellij >/dev/null 2>&1; then
+        echo "Error: zellij is not installed or not in PATH" >&2
+        return 1
+    fi
+    
+    # Check if session exists
+    local session_list
+    if ! session_list=$(zellij list-sessions 2>/dev/null); then
+        echo "Error: Failed to list zellij sessions" >&2
+        return 1
+    fi
+    
+    if echo "$session_list" | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$session_name\b"; then
         echo "📎 Attaching to existing session: $session_name"
-        zellij attach "$session_name"
+        if ! zellij attach "$session_name"; then
+            echo "Error: Failed to attach to session '$session_name'" >&2
+            return 1
+        fi
     else
         echo "✨ Creating new session: $session_name"
-        zellij --session "$session_name" ${layout:+--layout "$layout"}
+        if ! zellij --session "$session_name" ${layout:+--layout "$layout"}; then
+            echo "Error: Failed to create session '$session_name'" >&2
+            return 1
+        fi
     fi
 }
 
@@ -108,29 +146,73 @@ zjs() {
 # QUICK NAVIGATION & CREATION
 # =============================================================================
 
-# Quick session for common directories
-zjh() { cd "$HOME" && zj home; }           # Home session
-zjc() { cd "$HOME/.config" && zj config; } # Config session
-zjd() { cd "$HOME/Documents" && zj docs; } # Documents session
+# Quick session for common directories with path validation
+zjh() { 
+    if [[ ! -d "$HOME" ]]; then
+        echo "❌ Error: Home directory '$HOME' not accessible" >&2
+        return 1
+    fi
+    cd "$HOME" && zj home
+}
+
+zjc() { 
+    local config_dir="$HOME/.config"
+    if [[ ! -d "$config_dir" ]]; then
+        echo "❌ Error: Config directory '$config_dir' not found" >&2
+        return 1
+    fi
+    cd "$config_dir" && zj config
+}
+
+zjd() { 
+    local docs_dir="$HOME/Documents"
+    if [[ ! -d "$docs_dir" ]]; then
+        echo "❌ Error: Documents directory '$docs_dir' not found" >&2
+        return 1
+    fi
+    cd "$docs_dir" && zj docs
+}
 
 # Create session with specific layout for development
 zjdev() {
     local project_name="${1:-dev}"
     local layout="${2:-dev}"
+    
+    # Validate layout parameter if provided
+    if [[ -n "$layout" ]] && [[ ! "$layout" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo "❌ Error: Invalid layout name '$layout'" >&2
+        echo "   Layout names must contain only letters, numbers, hyphens, and underscores" >&2
+        return 1
+    fi
+    
     zj "$project_name" "$layout"
 }
 
 # Quick session for current git project
 zjgit() {
-    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        echo "❌ Not in a git repository"
+    if ! command -v git >/dev/null 2>&1; then
+        echo "❌ Error: git command not found" >&2
         return 1
     fi
     
-    local repo_root=$(git rev-parse --show-toplevel)
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "❌ Error: Not in a git repository" >&2
+        return 1
+    fi
+    
+    local repo_root
+    if ! repo_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+        echo "❌ Error: Failed to get git repository root" >&2
+        return 1
+    fi
+    
+    if [[ ! -d "$repo_root" ]]; then
+        echo "❌ Error: Repository root '$repo_root' not accessible" >&2
+        return 1
+    fi
+    
     local repo_name=$(basename "$repo_root")
-    cd "$repo_root"
-    zj "$repo_name"
+    cd "$repo_root" && zj "$repo_name"
 }
 
 # =============================================================================
@@ -189,13 +271,19 @@ zjwork() {
 # Quick session for dotfiles management
 zjdot() {
     local dotfiles_dir="${DOTFILES_DIR:-$HOME/.dotfiles}"
-    if [[ -d "$dotfiles_dir" ]]; then
-        cd "$dotfiles_dir"
-        zj "dotfiles"
-    else
-        echo "❌ Dotfiles directory not found at $dotfiles_dir"
-        echo "Set DOTFILES_DIR environment variable or create ~/.dotfiles"
+    
+    if [[ ! -d "$dotfiles_dir" ]]; then
+        echo "❌ Error: Dotfiles directory not found at '$dotfiles_dir'" >&2
+        echo "   Set DOTFILES_DIR environment variable or create ~/.dotfiles" >&2
+        return 1
     fi
+    
+    if [[ ! -r "$dotfiles_dir" ]]; then
+        echo "❌ Error: Dotfiles directory '$dotfiles_dir' not readable" >&2
+        return 1
+    fi
+    
+    cd "$dotfiles_dir" && zj "dotfiles"
 }
 
 # =============================================================================
