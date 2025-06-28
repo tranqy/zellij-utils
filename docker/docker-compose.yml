@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  zellij-utils-test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: zellij-utils-test
+    environment:
+      - TERM=xterm-256color
+      - DEBIAN_FRONTEND=noninteractive
+      - TEST_OUTPUT_DIR=/app/test-results
+      - TEST_VERBOSE=true
+      - ZJ_DEBUG_MODE=true
+    volumes:
+      # Mount source code for development
+      - ../:/app/zellij-utils:ro
+      # Mount test results output
+      - test-results:/app/test-results
+      # Mount logs
+      - test-logs:/app/logs
+    working_dir: /app/zellij-utils
+    command: ./docker/run_tests.sh
+    # Keep container running for debugging
+    tty: true
+    stdin_open: true
+    
+  # Additional test environment for compatibility testing
+  zellij-utils-test-alpine:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.alpine
+    container_name: zellij-utils-test-alpine
+    environment:
+      - TERM=xterm-256color
+      - TEST_OUTPUT_DIR=/app/test-results
+      - TEST_VERBOSE=true
+    volumes:
+      - ../:/app/zellij-utils:ro
+      - test-results-alpine:/app/test-results
+    working_dir: /app/zellij-utils
+    command: ./docker/run_tests.sh
+    profiles:
+      - alpine-test
+
+volumes:
+  test-results:
+    driver: local
+  test-logs:
+    driver: local
+  test-results-alpine:
+    driver: local
+
+networks:
+  default:
+    name: zellij-utils-test-network

@@ -1,0 +1,74 @@
+# Alpine Dockerfile for Zellij Utils Test Environment (Lightweight)
+FROM alpine:3.18
+
+# Install system dependencies
+RUN apk add --no-cache \
+    # Basic tools
+    curl \
+    wget \
+    git \
+    bash \
+    zsh \
+    # Build tools
+    build-base \
+    pkgconfig \
+    # Required for zellij
+    openssl-dev \
+    # Test utilities
+    bc \
+    inotify-tools \
+    # Text processing
+    sed \
+    grep \
+    gawk \
+    # Network tools
+    ca-certificates \
+    # Shell utilities
+    coreutils \
+    findutils
+
+# Install Rust and Cargo
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install zellij from source
+RUN git clone https://github.com/zellij-org/zellij.git /tmp/zellij \
+    && cd /tmp/zellij \
+    && cargo build --release \
+    && cp target/release/zellij /usr/local/bin/ \
+    && chmod +x /usr/local/bin/zellij \
+    && rm -rf /tmp/zellij
+
+# Install fzf
+RUN git clone --depth 1 https://github.com/junegunn/fzf.git /root/.fzf \
+    && /root/.fzf/install --all
+
+# Create test user
+RUN adduser -D -s /bin/bash testuser \
+    && echo "testuser:testuser" | chpasswd
+
+# Set up test environment
+RUN mkdir -p /home/testuser/.config/zellij \
+    && mkdir -p /home/testuser/.config/shell \
+    && mkdir -p /home/testuser/test-workspace \
+    && chown -R testuser:testuser /home/testuser
+
+# Copy project files
+COPY . /app/zellij-utils
+RUN chown -R testuser:testuser /app/zellij-utils
+
+# Switch to test user
+USER testuser
+WORKDIR /home/testuser
+
+# Set up environment
+RUN echo 'export PATH="/root/.fzf/bin:$PATH"' >> ~/.bashrc \
+    && echo 'export PATH="/root/.cargo/bin:$PATH"' >> ~/.bashrc \
+    && echo 'export EDITOR=nano' >> ~/.bashrc
+
+# Create test git configuration
+RUN git config --global user.name "Test User" \
+    && git config --global user.email "test@example.com"
+
+WORKDIR /app/zellij-utils
+CMD ["./docker/run_tests.sh"]
