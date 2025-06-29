@@ -195,7 +195,7 @@ Detailed results available at `test-results/test_plan_results.md`.
 ### Session Management
 - **Smart Naming** - Automatic session names from git repos and projects
 - **Layout Integration** - Pre-configured development layouts
-- **Navigation Helpers** - Quick access to common directories
+- **Session Deletion** - Interactive deletion with safety features
 - **Session Monitoring** - Status and health checking
 
 ### Configuration System
@@ -219,13 +219,13 @@ zj
 zjdev myproject dev
 
 # Quick navigation
-zjh        # Home directory session
-zjc        # Config directory session
 zjgit      # Current git repository session
 
 # Session management
 zjl        # List sessions
 zjk name   # Kill specific session
+zjd name   # Delete session with confirmation
+zjd --all  # Delete all sessions except current
 zjs name   # Switch to session
 
 # Configuration management
@@ -338,6 +338,9 @@ MIT License - see LICENSE file for details.
 | `zjdev <name>` | Development session | `zjdev api-server dev` |
 | `zjl` | List sessions | `zjl` |
 | `zjk <name>` | Kill session | `zjk myproject` |
+| `zjd <name>` | Delete session | `zjd myproject` |
+| `zjd --all` | Delete all except current | `zjd --all` |
+| `zjd` | Interactive deletion | `zjd` (select from list) |
 
 ### Configuration Commands
 

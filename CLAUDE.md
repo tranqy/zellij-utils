@@ -25,8 +25,8 @@ This copies files to appropriate system locations:
 ### Main Components
 
 **scripts/zellij-utils.sh** - The primary utility script containing:
-- Session management functions (`zj`, `zjl`, `zjk`, `zjka`, `zjs`)
-- Quick navigation helpers (`zjh`, `zjc`, `zjd`, `zjgit`, `zjdot`)
+- Session management functions (`zj`, `zjl`, `zjk`, `zjd`, `zjka`, `zjs`)
+- Quick navigation helpers (`zjgit`)
 - Development workflow functions (`zjwork`, `zjdev`)
 - Monitoring utilities (`zjinfo`, `zjstatus`)
 - Auto-start configuration (`zj_auto`)
@@ -65,6 +65,27 @@ Since this is a shell script collection, development involves:
 2. Test manually by sourcing the script: `source scripts/zellij-utils.sh`
 3. Modify layouts in `layouts/*.kdl` files
 4. Test installation with `./scripts/install.sh`
+5. **IMPORTANT**: Commit changes after completing each task or significant feature
+
+### Git Commit Guidelines
+
+**ALWAYS commit changes after completing tasks.** Use descriptive commit messages that explain:
+- What functionality was added/changed
+- Why the changes were made
+- Any breaking changes or important notes
+
+Example commit workflow:
+```bash
+git add .
+git commit -m "feat: add interactive session deletion with zjd function
+
+- Implement zjd function with force, pattern, and all flags
+- Add safety confirmations and current session protection
+- Include fzf integration for interactive selection
+- Update tests and documentation"
+```
+
+**Commit after every completed task** to maintain clear development history and enable easy rollbacks if needed.
 
 ## Key Functions Reference
 
@@ -72,17 +93,28 @@ Since this is a shell script collection, development involves:
 - `zj [name] [layout]` - Create/attach to session with smart naming
 - `zjl` - List active sessions
 - `zjk <name>` - Kill specific session
+- `zjd [name] [--force] [--pattern] [--all]` - Delete session with interactive selection
 - `zjs <name>` - Switch to session
 
 **Development:**
 - `zjwork [name]` - Create development workspace with multiple panes
 - `zjdev [name] [layout]` - Development session with specific layout
-- `zjgit` - Session for current git repository
 
 **Navigation:**
-- `zjh` - Home directory session
-- `zjc` - Config directory session  
-- `zjdot` - Dotfiles management session
+- `zjgit` - Session for current git repository
 - `zjf` - Fuzzy session selection (requires fzf)
 
-The project has no build system, tests, or linting - it's pure shell scripting focused on Zellij terminal multiplexer enhancement.
+## Testing
+
+The project includes comprehensive test suites:
+
+- **tests/integration_tests.sh** - Installation and core functionality tests
+- **tests/security_tests.sh** - Input validation and injection prevention tests
+- **tests/compatibility_tests.sh** - Shell and zellij version compatibility tests
+
+Run all tests with:
+```bash
+bash tests/run_all_tests.sh
+```
+
+The project has no build system or linting - it's pure shell scripting focused on Zellij terminal multiplexer enhancement.
