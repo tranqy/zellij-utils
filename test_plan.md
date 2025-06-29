@@ -184,6 +184,44 @@ This test plan ensures the zellij-utils system is production-ready by validating
   zellij kill-session test2
   ```
 
+- [ ] **Test interactive session deletion**
+  ```bash
+  source scripts/zellij-utils.sh
+  zellij -d -s test-delete1 && zellij -d -s test-delete2
+  echo "1" | zjd  # Should interactively delete first session
+  zjl | grep -v test-delete1  # Should not show deleted session
+  zjd test-delete2 --force  # Should delete without confirmation
+  zjl | grep -v test-delete2  # Should not show deleted session
+  ```
+
+- [ ] **Test session deletion safety features**
+  ```bash
+  source scripts/zellij-utils.sh
+  zellij -d -s current-test
+  # From within the session, test current session protection
+  ZELLIJ_SESSION_NAME="current-test" zjd current-test 2>&1 | grep "Cannot delete current session"
+  # Test force deletion of current session
+  ZELLIJ_SESSION_NAME="current-test" zjd current-test --force  # Should work
+  ```
+
+- [ ] **Test bulk session deletion**
+  ```bash
+  source scripts/zellij-utils.sh
+  for i in {1..5}; do zellij -d -s "bulk-test-$i"; done
+  zjd --all --force  # Should delete all except current
+  zjl | grep -c "bulk-test" | grep "^0$"  # Should show no bulk-test sessions
+  ```
+
+- [ ] **Test pattern-based deletion**
+  ```bash
+  source scripts/zellij-utils.sh
+  zellij -d -s pattern-test-1 && zellij -d -s pattern-test-2 && zellij -d -s other-session
+  zjd pattern-test --pattern --force  # Should delete pattern-test-* sessions
+  zjl | grep -v "pattern-test"  # Should not show pattern sessions
+  zjl | grep "other-session"   # Should still show other-session
+  zellij kill-session other-session
+  ```
+
 #### 3.2 Layout Tests
 - [ ] **Test development layout creation**
   ```bash
@@ -202,14 +240,14 @@ This test plan ensures the zellij-utils system is production-ready by validating
   ```
 
 #### 3.3 Navigation Tests
-- [ ] **Test directory navigation functions**
+- [ ] **Test git repository navigation**
   ```bash
+  cd /tmp && git init test-nav-repo && cd test-nav-repo
   source scripts/zellij-utils.sh
-  zjh  # Should create/attach to home session
-  zjc  # Should create/attach to config session
-  # Clean up
-  zellij kill-session home 2>/dev/null || true
-  zellij kill-session config 2>/dev/null || true
+  zjgit  # Should create/attach to test-nav-repo session
+  zellij list-sessions | grep test-nav-repo
+  zellij kill-session test-nav-repo
+  cd .. && rm -rf test-nav-repo
   ```
 
 ### 4. Security Tests
@@ -222,6 +260,11 @@ This test plan ensures the zellij-utils system is production-ready by validating
   zj "session; rm -rf /"  # Should be sanitized
   zj "session\$(cat /etc/passwd)"  # Should be sanitized
   zj "session\`whoami\`"  # Should be sanitized
+  
+  # Test zjd injection prevention
+  zjd "session; rm -rf /" --force 2>&1 | grep "invalid characters"
+  zjd "session\$(whoami)" --force 2>&1 | grep "invalid characters"
+  zjd "session\`id\`" --force 2>&1 | grep "invalid characters"
   ```
 
 - [ ] **Test path traversal prevention**
@@ -288,7 +331,8 @@ This test plan ensures the zellij-utils system is production-ready by validating
   # Create 20 sessions
   for i in {1..20}; do zellij -d -s "scale-test-$i"; done
   time zjl  # Should handle many sessions efficiently
-  time zjka "scale-test"  # Should kill all efficiently
+  time zjd scale-test --pattern --force  # Should delete pattern efficiently
+  time zjd --all --force  # Should delete remaining sessions efficiently
   ```
 
 ### 6. Integration Tests
@@ -363,7 +407,8 @@ This test plan ensures the zellij-utils system is production-ready by validating
 - [ ] **Test with non-existent directories**
   ```bash
   source scripts/zellij-utils.sh
-  zjd /nonexistent/path 2>&1 | grep -i "error"  # Should show error
+  cd /nonexistent/path 2>&1 | grep -i "error"  # Should show error
+  zj 2>&1 | grep -i "error"  # Should handle gracefully
   ```
 
 #### 7.2 Concurrent Access Tests
@@ -484,10 +529,11 @@ The system is considered production-ready when:
 ## Risk Assessment
 
 **High Risk Areas:**
-- Shell injection in session names
-- Path traversal in navigation functions
+- Shell injection in session names and deletion patterns
+- Session deletion without proper confirmation (data loss)
 - Configuration migration data loss
 - Cache corruption issues
+- Accidental bulk session deletion
 
 **Medium Risk Areas:**
 - Performance degradation with many sessions
