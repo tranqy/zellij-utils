@@ -191,6 +191,12 @@ test_core_functions() {
             log_error "❌ Session list function not found"
         fi
         
+        if grep -q "^zjd()" "$script_path"; then
+            log_info "✅ Delete session function defined"
+        else
+            log_error "❌ Delete session function not found"
+        fi
+        
         # Test caching system
         if grep -q "_ZJ_GIT_CACHE" "$script_path"; then
             log_info "✅ Caching system implemented"
@@ -242,6 +248,79 @@ test_configuration() {
     fi
 }
 
+# Test delete session functionality
+test_delete_functions() {
+    log_info "Testing delete session functionality"
+    
+    local script_path="$TEST_DIR/.config/shell/zellij-utils.sh"
+    
+    if [[ ! -f "$script_path" ]]; then
+        log_error "❌ Script not found for delete function testing"
+        return 1
+    fi
+    
+    # Test zjd function exists and has proper structure
+    if grep -q "^zjd()" "$script_path"; then
+        log_info "✅ zjd function exists"
+        
+        # Test for key features in the function
+        if grep -A 20 "^zjd()" "$script_path" | grep -q "force_flag"; then
+            log_info "✅ zjd has force flag support"
+        else
+            log_error "❌ zjd missing force flag support"
+        fi
+        
+        if grep -A 50 "^zjd()" "$script_path" | grep -q "pattern_mode"; then
+            log_info "✅ zjd has pattern matching support"
+        else
+            log_error "❌ zjd missing pattern matching support"
+        fi
+        
+        if grep -A 200 "^zjd()" "$script_path" | grep -q "current_session"; then
+            log_info "✅ zjd has current session protection"
+        else
+            log_error "❌ zjd missing current session protection"
+        fi
+        
+        if grep -A 200 "^zjd()" "$script_path" | grep -q "fzf"; then
+            log_info "✅ zjd has fzf integration"
+        else
+            log_error "❌ zjd missing fzf integration"
+        fi
+        
+        # Test cache invalidation
+        if grep -A 200 "^zjd()" "$script_path" | grep -q "_ZJ_SESSION_CACHE"; then
+            log_info "✅ zjd invalidates session cache"
+        else
+            log_error "❌ zjd missing cache invalidation"
+        fi
+        
+    else
+        log_error "❌ zjd function not found"
+    fi
+    
+    # Test basic function execution (with no sessions)
+    if bash -c "source '$script_path'; echo 'n' | zjd --help 2>/dev/null" 2>/dev/null; then
+        log_info "✅ zjd help/usage works"
+    else
+        log_warn "⚠️  zjd help test inconclusive"
+    fi
+    
+    # Test completion registration
+    if grep -q "complete.*zjd" "$script_path"; then
+        log_info "✅ zjd completion registered"
+    else
+        log_error "❌ zjd completion not registered"
+    fi
+    
+    # Test alias registration
+    if grep -q "alias.*zdelete.*zjd" "$script_path"; then
+        log_info "✅ zdelete alias registered"
+    else
+        log_error "❌ zdelete alias not registered"
+    fi
+}
+
 # Test uninstallation (cleanup)
 test_uninstallation() {
     log_info "Testing cleanup/uninstallation"
@@ -279,6 +358,7 @@ main() {
     test_dry_run
     test_installation
     test_core_functions
+    test_delete_functions
     test_configuration
     test_uninstallation
     

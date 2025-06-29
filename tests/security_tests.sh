@@ -74,6 +74,26 @@ run_test "Backtick injection prevention" \
     "zj 'test\`id\`' 2>&1 | grep -q 'invalid characters'" \
     "pass"
 
+# Test 7: Delete function injection prevention
+run_test "Delete function injection prevention" \
+    "zjd 'test; rm -rf /tmp/test' --force 2>&1 | grep -q 'invalid characters'" \
+    "pass"
+
+# Test 8: Delete function invalid options
+run_test "Delete function invalid options" \
+    "zjd --invalid-option 2>&1 | grep -q 'Unknown option'" \
+    "pass"
+
+# Test 9: Delete function current session protection
+run_test "Delete function current session protection" \
+    "ZELLIJ_SESSION_NAME='test' zjd 'test' 2>&1 | grep -q 'Cannot delete current session'" \
+    "pass"
+
+# Test 10: Delete function empty session name handling
+run_test "Delete function empty session name handling" \
+    "zjd '' 2>&1 | grep -q 'No sessions to delete'" \
+    "pass"
+
 echo "================================================"
 echo "Security Tests Complete"
 echo "Tests run: $tests_run"

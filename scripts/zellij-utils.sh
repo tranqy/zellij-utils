@@ -257,6 +257,212 @@ zjk() {
     zellij kill-session "$session_name"
 }
 
+# Delete session with interactive selection and safety checks
+zjd() {
+    local session_name="$1"
+    local force_flag=false
+    local pattern_mode=false
+    local all_mode=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --force|-f)
+                force_flag=true
+                shift
+                ;;
+            --pattern|-p)
+                pattern_mode=true
+                shift
+                ;;
+            --all|-a)
+                all_mode=true
+                shift
+                ;;
+            -*)
+                echo "❌ Unknown option: $1" >&2
+                echo "Usage: zjd [session_name] [--force] [--pattern] [--all]" >&2
+                return 1
+                ;;
+            *)
+                if [[ -z "$session_name" ]]; then
+                    session_name="$1"
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    # Clear expired cache entries
+    _zj_clear_expired_cache
+    
+    # Get current session list
+    local session_list
+    if ! session_list=$(_zj_get_session_list); then
+        echo "❌ Error: Failed to get session list" >&2
+        return 1
+    fi
+    
+    if [[ -z "$session_list" ]]; then
+        echo "No active sessions to delete"
+        return 0
+    fi
+    
+    local sessions_to_delete=()
+    local current_session="${ZELLIJ_SESSION_NAME:-}"
+    
+    if [[ "$all_mode" == true ]]; then
+        # Delete all sessions except current
+        while IFS= read -r line; do
+            [[ -n "$line" ]] || continue
+            local clean_line=$(echo "$line" | sed 's/\x1b\[[0-9;]*m//g')
+            local session=$(echo "$clean_line" | awk '{print $1}')
+            if [[ "$session" != "$current_session" ]]; then
+                sessions_to_delete+=("$session")
+            fi
+        done <<< "$session_list"
+        
+    elif [[ -z "$session_name" ]]; then
+        # Interactive selection
+        if command -v fzf >/dev/null 2>&1; then
+            local selected_sessions
+            selected_sessions=$(echo "$session_list" | sed 's/\x1b\[[0-9;]*m//g' | awk '{print $1}' | grep -v "^$current_session$" | fzf --multi --prompt="Select sessions to delete (TAB for multiple): " --height=10)
+            
+            if [[ -z "$selected_sessions" ]]; then
+                echo "No sessions selected"
+                return 0
+            fi
+            
+            while IFS= read -r session; do
+                [[ -n "$session" ]] && sessions_to_delete+=("$session")
+            done <<< "$selected_sessions"
+        else
+            echo "Available sessions (excluding current):"
+            local available_sessions=()
+            local index=1
+            
+            while IFS= read -r line; do
+                [[ -n "$line" ]] || continue
+                local clean_line=$(echo "$line" | sed 's/\x1b\[[0-9;]*m//g')
+                local session=$(echo "$clean_line" | awk '{print $1}')
+                if [[ "$session" != "$current_session" ]]; then
+                    echo "  $index) $session"
+                    available_sessions+=("$session")
+                    ((index++))
+                fi
+            done <<< "$session_list"
+            
+            if [[ ${#available_sessions[@]} -eq 0 ]]; then
+                echo "No other sessions available to delete"
+                return 0
+            fi
+            
+            echo ""
+            read -p "Enter session number(s) to delete (space-separated, or 'all'): " -r selection
+            
+            if [[ "$selection" == "all" ]]; then
+                sessions_to_delete=("${available_sessions[@]}")
+            else
+                for num in $selection; do
+                    if [[ "$num" =~ ^[0-9]+$ ]] && [[ $num -ge 1 ]] && [[ $num -le ${#available_sessions[@]} ]]; then
+                        sessions_to_delete+=("${available_sessions[$((num-1))]}")
+                    else
+                        echo "⚠️  Invalid selection: $num" >&2
+                    fi
+                done
+            fi
+        fi
+        
+    elif [[ "$pattern_mode" == true ]]; then
+        # Pattern matching
+        while IFS= read -r line; do
+            [[ -n "$line" ]] || continue
+            local clean_line=$(echo "$line" | sed 's/\x1b\[[0-9;]*m//g')
+            local session=$(echo "$clean_line" | awk '{print $1}')
+            if [[ "$session" == $session_name* ]] && [[ "$session" != "$current_session" ]]; then
+                sessions_to_delete+=("$session")
+            fi
+        done <<< "$session_list"
+        
+    else
+        # Single session deletion
+        # Validate session name first
+        if [[ "$session_name" =~ [[:space:]\;\|\&\$\`\(\)] ]]; then
+            echo "❌ Error: Session name contains invalid characters" >&2
+            return 1
+        fi
+        
+        if [[ "$session_name" == "$current_session" ]] && [[ "$force_flag" == false ]]; then
+            echo "❌ Cannot delete current session '$session_name' without --force flag" >&2
+            return 1
+        fi
+        
+        # Check if session exists
+        if echo "$session_list" | sed 's/\x1b\[[0-9;]*m//g' | grep -q "^$session_name\b"; then
+            sessions_to_delete+=("$session_name")
+        else
+            echo "❌ Session '$session_name' not found" >&2
+            zjl
+            return 1
+        fi
+    fi
+    
+    # Confirm deletion if not forced
+    if [[ ${#sessions_to_delete[@]} -eq 0 ]]; then
+        echo "No sessions to delete"
+        return 0
+    fi
+    
+    echo ""
+    echo "Sessions to delete:"
+    for session in "${sessions_to_delete[@]}"; do
+        if [[ "$session" == "$current_session" ]]; then
+            echo "  🔸 $session (current session)"
+        else
+            echo "  🔸 $session"
+        fi
+    done
+    
+    if [[ "$force_flag" == false ]]; then
+        echo ""
+        read -p "Are you sure you want to delete ${#sessions_to_delete[@]} session(s)? (y/N): " -r confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            echo "Operation cancelled"
+            return 0
+        fi
+    fi
+    
+    # Delete sessions
+    local failed=0
+    local success=0
+    
+    echo ""
+    echo "🗑️  Deleting ${#sessions_to_delete[@]} session(s)..."
+    
+    for session in "${sessions_to_delete[@]}"; do
+        echo "  Deleting session: $session"
+        if zellij kill-session "$session" 2>/dev/null; then
+            ((success++))
+        else
+            echo "  ⚠️  Failed to delete session: $session" >&2
+            ((failed++))
+        fi
+    done
+    
+    # Invalidate session cache after deletion
+    unset _ZJ_SESSION_CACHE["sessions"]
+    
+    # Summary
+    echo ""
+    if [[ $success -gt 0 ]]; then
+        echo "✅ Successfully deleted $success session(s)"
+    fi
+    if [[ $failed -gt 0 ]]; then
+        echo "⚠️  Failed to delete $failed session(s)" >&2
+        return 1
+    fi
+}
+
 # Kill all sessions except current
 zjka() {
     local current_session="${ZELLIJ_SESSION_NAME:-}"
@@ -349,33 +555,6 @@ zjdev() {
 # QUICK NAVIGATION & CREATION
 # =============================================================================
 
-# Quick session for common directories with path validation
-zjh() { 
-    if [[ ! -d "$HOME" ]]; then
-        echo "❌ Error: Home directory '$HOME' not accessible" >&2
-        return 1
-    fi
-    cd "$HOME" && zj home
-}
-
-zjc() { 
-    local config_dir="$HOME/.config"
-    if [[ ! -d "$config_dir" ]]; then
-        echo "❌ Error: Config directory '$config_dir' not found" >&2
-        return 1
-    fi
-    cd "$config_dir" && zj config
-}
-
-zjd() { 
-    local docs_dir="$HOME/Documents"
-    if [[ ! -d "$docs_dir" ]]; then
-        echo "❌ Error: Documents directory '$docs_dir' not found" >&2
-        return 1
-    fi
-    cd "$docs_dir" && zj docs
-}
-
 # Quick session for current git project
 zjgit() {
     if ! command -v git >/dev/null 2>&1; then
@@ -401,24 +580,6 @@ zjgit() {
     
     local repo_name=$(basename "$repo_root")
     cd "$repo_root" && zj "$repo_name"
-}
-
-# Quick session for dotfiles management
-zjdot() {
-    local dotfiles_dir="${DOTFILES_DIR:-$HOME/.dotfiles}"
-    
-    if [[ ! -d "$dotfiles_dir" ]]; then
-        echo "❌ Error: Dotfiles directory not found at '$dotfiles_dir'" >&2
-        echo "   Set DOTFILES_DIR environment variable or create ~/.dotfiles" >&2
-        return 1
-    fi
-    
-    if [[ ! -r "$dotfiles_dir" ]]; then
-        echo "❌ Error: Dotfiles directory '$dotfiles_dir' not readable" >&2
-        return 1
-    fi
-    
-    cd "$dotfiles_dir" && zj "dotfiles"
 }
 
 # =============================================================================
@@ -627,6 +788,7 @@ alias zls='zjl'
 alias zkill='zjk'
 alias zswitch='zjs'
 alias zinfo='zjinfo'
+alias zdelete='zjd'
 
 
 # =============================================================================
@@ -645,7 +807,7 @@ _zellij_sessions() {
 }
 
 # Register completions
-complete -F _zellij_sessions zjs zjk
+complete -F _zellij_sessions zjs zjk zjd
 
 # =============================================================================
 # INITIALIZATION
