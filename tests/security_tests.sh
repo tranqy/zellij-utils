@@ -24,7 +24,7 @@ run_test() {
     echo "Testing: $test_name"
     tests_run=$((tests_run + 1))
     
-    if eval "$test_command" 2>/dev/null; then
+    if eval "$test_command"; then
         if [[ "$expected_result" == "pass" ]]; then
             echo "✅ PASS: $test_name"
             tests_passed=$((tests_passed + 1))
@@ -46,7 +46,7 @@ echo "================================================"
 
 # Test 1: Shell injection in session names
 run_test "Shell injection prevention" \
-    "zj 'test; rm -rf /tmp/test' 2>&1 | grep -q 'invalid characters'" \
+    "zj 'test; rm -rf /tmp/test' 2>&1 | grep -q 'contains invalid characters'" \
     "pass"
 
 # Test 2: Empty session name validation
@@ -66,17 +66,17 @@ run_test "Valid session name acceptance" \
 
 # Test 5: Special characters in session names
 run_test "Special characters prevention" \
-    "zj 'test\$(whoami)' 2>&1 | grep -q 'invalid characters'" \
+    "zj 'test\$(whoami)' 2>&1 | grep -q 'contains invalid characters'" \
     "pass"
 
 # Test 6: Backtick injection prevention
 run_test "Backtick injection prevention" \
-    "zj 'test\`id\`' 2>&1 | grep -q 'invalid characters'" \
+    "zj 'test\`id\`' 2>&1 | grep -q 'contains invalid characters'" \
     "pass"
 
 # Test 7: Delete function injection prevention
 run_test "Delete function injection prevention" \
-    "zjd 'test; rm -rf /tmp/test' --force 2>&1 | grep -q 'invalid characters'" \
+    "zjd 'test; rm -rf /tmp/test' --force 2>&1 | grep -q 'contains invalid characters'" \
     "pass"
 
 # Test 8: Delete function invalid options
