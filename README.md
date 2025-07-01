@@ -5,11 +5,23 @@ A collection of powerful, configuration-driven shell utilities to streamline you
 **Why use Zellij Utils?**
 
 -   **Smart Session Management**: Automatically name sessions based on your current project, git repository, or directory. No more `zellij attach` followed by hunting for the right session.
+-   **Persistent & Remote Workflows**: Keep your sessions alive on a remote machine, allowing you to disconnect and reconnect from anywhere without interrupting your work. Perfect for long-running tasks, AI agent pairs, and development servers.
 -   **Effortless Workspaces**: Jump directly into pre-defined development layouts (`editor`, `git`, `logs`, etc.) with a single command.
 -   **Safety and Control**: Interactively delete sessions with confirmations, preventing accidental data loss.
 -   **Highly Configurable**: Customize everything from session naming conventions to auto-start behavior.
 
 Stop thinking about managing your multiplexer and start focusing on your work.
+
+### 💡 Example Use Case: Persistent & Mobile Workflows
+
+Are you working with long-running processes like AI agents, development servers, or complex builds? Zellij Utils helps you maintain persistent sessions that you can access from anywhere.
+
+Imagine you start an "agentic pair" chat session from your desktop IDE. With Zellij and these utilities, that session lives on your machine (or a remote server) independently of your IDE. You can close your laptop, head out, and then seamlessly re-attach to the exact same session from your phone or another computer via SSH. Your agents, chats, and processes will be exactly as you left them.
+
+This workflow is ideal for:
+-   **AI and Agent Development**: Keep your models running and chats active 24/7.
+-   **Remote Development**: Start a build on your work machine and check its progress from home.
+-   **Mobile Productivity**: Quickly access your terminal sessions on the go to issue commands or check logs.
 
 ## 🚀 Installation
 
