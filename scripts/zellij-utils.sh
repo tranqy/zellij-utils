@@ -117,8 +117,14 @@ _load_session_config() {
 
 # Enhanced session creation/attachment with smart naming
 zj() {
-    local session_name="$1"
-    local layout="$2"
+    local session_name="${1:-}"
+    local layout="${2:-}"
+    local provided_empty=false
+    
+    # Check if session name was explicitly provided as empty
+    if [[ $# -gt 0 && -z "$session_name" ]]; then
+        provided_empty=true
+    fi
     
     if [[ -z "$session_name" ]]; then
         _load_session_config
@@ -172,23 +178,28 @@ zj() {
     fi
     
     # Validate and sanitize session name
-    if [[ -z "$session_name" ]]; then
+    if [[ "$provided_empty" == true ]]; then
         echo "Error: Session name cannot be empty" >&2
         return 1
     fi
     
-    # Check for dangerous characters
-    if [[ "$session_name" =~ [[:space:]\;\|\&\$\`\(\)] ]]; then
+    if [[ -z "$session_name" ]]; then
+        echo "Error: Failed to generate session name" >&2
+        return 1
+    fi
+    
+    # Check for dangerous characters (improved pattern)
+    if [[ "$session_name" =~ [\$\`\;\|\&\(\)\<\>\'\"] ]]; then
         echo "Error: Session name contains invalid characters" >&2
         return 1
     fi
     
     # Apply transformations
-    if [[ "$SANITIZE_NAMES" == true ]]; then
+    if [[ "${SANITIZE_NAMES:-false}" == true ]]; then
         session_name=$(echo "$session_name" | tr -cd '[:alnum:]_-')
     fi
     
-    if [[ "$LOWERCASE_NAMES" == true ]]; then
+    if [[ "${LOWERCASE_NAMES:-false}" == true ]]; then
         session_name=$(echo "$session_name" | tr '[:upper:]' '[:lower:]')
     fi
     
@@ -304,7 +315,7 @@ zjd() {
     fi
     
     if [[ -z "$session_list" ]]; then
-        echo "No active sessions to delete"
+        echo "No sessions to delete"
         return 0
     fi
     
@@ -386,8 +397,14 @@ zjd() {
         
     else
         # Single session deletion
+        # Check if session name is empty for single deletion
+        if [[ -z "$session_name" ]]; then
+            echo "No sessions to delete"
+            return 0
+        fi
+        
         # Validate session name first
-        if [[ "$session_name" =~ [[:space:]\;\|\&\$\`\(\)] ]]; then
+        if [[ "$session_name" =~ [\$\`\;\|\&\(\)\<\>\'\"] ]]; then
             echo "❌ Error: Session name contains invalid characters" >&2
             return 1
         fi
