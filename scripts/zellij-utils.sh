@@ -124,6 +124,23 @@ zj() {
     # Check if session name was explicitly provided as empty
     if [[ $# -gt 0 && -z "$session_name" ]]; then
         provided_empty=true
+        echo "Error: Session name cannot be empty" >&2
+        return 1
+    fi
+    
+    # Validate user-provided session name immediately
+    if [[ -n "$session_name" ]]; then
+        # Check for dangerous characters
+        if [[ "$session_name" =~ [\$\`\;\|\&\(\)\<\>\'\"] ]]; then
+            echo "Error: Session name contains invalid characters" >&2
+            return 1
+        fi
+        
+        # Check length
+        if [[ ${#session_name} -gt 50 ]]; then
+            echo "Error: Session name too long" >&2
+            return 1
+        fi
     fi
     
     if [[ -z "$session_name" ]]; then
@@ -270,7 +287,7 @@ zjk() {
 
 # Delete session with interactive selection and safety checks
 zjd() {
-    local session_name="$1"
+    local session_name=""
     local force_flag=false
     local pattern_mode=false
     local all_mode=false
@@ -303,6 +320,27 @@ zjd() {
                 ;;
         esac
     done
+    
+    # Handle empty session name case first
+    if [[ -n "$session_name" && -z "${session_name// /}" ]]; then
+        echo "No sessions to delete"
+        return 0
+    fi
+    
+    # Validate session name if provided
+    if [[ -n "$session_name" ]]; then
+        # Check for dangerous characters
+        if [[ "$session_name" =~ [\$\`\;\|\&\(\)\<\>\'\"] ]]; then
+            echo "Error: Session name contains invalid characters" >&2
+            return 1
+        fi
+        
+        # Check length
+        if [[ ${#session_name} -gt 50 ]]; then
+            echo "Error: Session name too long" >&2
+            return 1
+        fi
+    fi
     
     # Clear expired cache entries
     _zj_clear_expired_cache
@@ -403,14 +441,9 @@ zjd() {
             return 0
         fi
         
-        # Validate session name first
-        if [[ "$session_name" =~ [\$\`\;\|\&\(\)\<\>\'\"] ]]; then
-            echo "❌ Error: Session name contains invalid characters" >&2
-            return 1
-        fi
-        
-        if [[ "$session_name" == "$current_session" ]] && [[ "$force_flag" == false ]]; then
-            echo "❌ Cannot delete current session '$session_name' without --force flag" >&2
+        # Current session protection
+        if [[ "$session_name" == "$current_session" ]]; then
+            echo "❌ Cannot delete current session '$session_name'" >&2
             return 1
         fi
         

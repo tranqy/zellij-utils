@@ -61,13 +61,29 @@ setup_test_environment() {
         log_warning "Using /tmp for test output due to permission issues"
     }
     
-    # Set up test user environment
+    # Set up test user environment with complete isolation
     export HOME="/home/testuser"
     export USER="testuser"
     export SHELL="/bin/bash"
+    export ZELLIJ_CONFIG_DIR="/home/testuser/.config/zellij"
+    export ZJ_DISABLE_AUTO=1
+    export ZJ_TEST_MODE=1
     
-    # Clean any existing zellij sessions
-    pkill zellij 2>/dev/null || true
+    # Comprehensive session cleanup for complete isolation
+    log_info "Cleaning up any existing zellij sessions..."
+    pkill -f zellij 2>/dev/null || true
+    pkill -f "zellij.*" 2>/dev/null || true
+    sleep 3
+    
+    # Clean zellij cache and temporary files
+    rm -rf ~/.cache/zellij/* 2>/dev/null || true
+    rm -rf /tmp/zellij-* 2>/dev/null || true
+    rm -rf /tmp/*zellij* 2>/dev/null || true
+    
+    # Ensure clean socket directory
+    rm -rf /tmp/zellij-$(id -u)/ 2>/dev/null || true
+    
+    # Wait for complete cleanup
     sleep 2
     
     # Verify required tools
@@ -494,11 +510,23 @@ EOF
 cleanup() {
     log_info "Cleaning up test environment..."
     
-    # Kill any remaining zellij processes
-    pkill zellij 2>/dev/null || true
+    # Kill any remaining zellij processes with comprehensive cleanup
+    pkill -f zellij 2>/dev/null || true
+    pkill -f "zellij.*" 2>/dev/null || true
+    sleep 2
     
-    # Clean up temporary files
+    # Clean up zellij-specific temporary files and caches
+    rm -rf ~/.cache/zellij/* 2>/dev/null || true
+    rm -rf /tmp/zellij-* 2>/dev/null || true
+    rm -rf /tmp/*zellij* 2>/dev/null || true
+    rm -rf /tmp/zellij-$(id -u)/ 2>/dev/null || true
+    
+    # Clean up general test temporary files
     rm -rf /tmp/test-* /tmp/*-test* 2>/dev/null || true
+    
+    # Ensure no leftover session files
+    find /tmp -name "*zellij*" -type f -delete 2>/dev/null || true
+    find /tmp -name "*zellij*" -type d -exec rm -rf {} + 2>/dev/null || true
     
     log_info "Cleanup complete"
 }

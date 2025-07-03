@@ -106,15 +106,51 @@ git commit -m "feat: add interactive session deletion with zjd function
 
 ## Testing
 
-The project includes comprehensive test suites:
+The project includes comprehensive test suites with both local and containerized testing options:
+
+### Test Suites
 
 - **tests/integration_tests.sh** - Installation and core functionality tests
 - **tests/security_tests.sh** - Input validation and injection prevention tests
 - **tests/compatibility_tests.sh** - Shell and zellij version compatibility tests
 
-Run all tests with:
+### Testing Options
+
+**Containerized Testing (Recommended):**
 ```bash
+# Run tests in isolated Docker containers
+./scripts/test-docker.sh run              # Ubuntu container
+./scripts/test-docker.sh run alpine       # Alpine container
+./scripts/test-docker.sh build --force    # Rebuild containers
+./scripts/test-docker.sh shell            # Interactive shell
+```
+
+**Local Testing (with Session Isolation):**
+```bash
+# Run tests locally with session backup/restore
+./scripts/test-local.sh run               # Full isolation
+./scripts/test-local.sh --docker-only     # Force Docker usage
+```
+
+**Traditional Testing:**
+```bash
+# Original test runner (may conflict with active sessions)
 bash tests/run_all_tests.sh
 ```
+
+### Container Testing Features
+
+- **Complete Session Isolation** - No interference with local Zellij sessions
+- **Multi-Environment Testing** - Ubuntu and Alpine Linux support
+- **Comprehensive Cleanup** - Automatic session and cache cleanup
+- **CI/CD Integration** - GitHub Actions workflow for automated testing
+- **Test Result Extraction** - Detailed reports and artifacts
+- **Security Scanning** - Trivy integration for container security
+
+### Environment Variables for Testing
+
+- `ZJ_TEST_MODE=1` - Enable test mode
+- `ZJ_DISABLE_AUTO=1` - Disable auto-start during testing
+- `ZELLIJ_CONFIG_DIR` - Custom config directory for isolation
 
 The project has no build system or linting - it's pure shell scripting focused on Zellij terminal multiplexer enhancement.

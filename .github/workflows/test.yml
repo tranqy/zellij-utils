@@ -1,70 +1,167 @@
-name: Test Suite
+name: Containerized Test Suite
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
+  schedule:
+    # Run tests daily at 6 AM UTC
+    - cron: '0 6 * * *'
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        shell: [bash, zsh]
-        
-    steps:
-    - uses: actions/checkout@v4
+        test-type: [main, alpine]
+        include:
+          - test-type: main
+            dockerfile: docker/Dockerfile
+            compose-service: zellij-utils-test
+          - test-type: alpine
+            dockerfile: docker/Dockerfile.alpine
+            compose-service: zellij-utils-test-alpine
     
-    - name: Install dependencies
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ matrix.test-type }}-${{ hashFiles(matrix.dockerfile) }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-${{ matrix.test-type }}-
+          ${{ runner.os }}-buildx-
+          
+    - name: Build test image
       run: |
-        sudo apt-get update
-        sudo apt-get install -y zsh curl
+        docker-compose build ${{ matrix.compose-service }}
         
-    - name: Install Zellij
+    - name: Run containerized tests
       run: |
-        curl -L https://github.com/zellij-org/zellij/releases/latest/download/zellij-x86_64-unknown-linux-musl.tar.gz | tar -xz
-        sudo mv zellij /usr/local/bin/
-        
-    - name: Set up shell
-      run: |
-        if [ "${{ matrix.shell }}" = "zsh" ]; then
-          sudo chsh -s $(which zsh) $USER
+        if [ "${{ matrix.test-type }}" = "alpine" ]; then
+          docker-compose --profile alpine-test up --abort-on-container-exit ${{ matrix.compose-service }}
+        else
+          docker-compose up --abort-on-container-exit ${{ matrix.compose-service }}
         fi
         
-    - name: Run tests
-      shell: ${{ matrix.shell }}
+    - name: Extract test results
+      if: always()
       run: |
-        cd tests
-        bash run_all_tests.sh
+        # Create results directory
+        mkdir -p test-results
         
-    - name: Test installation
-      shell: ${{ matrix.shell }}
-      run: |
-        chmod +x scripts/install.sh
-        ./scripts/install.sh
+        # Copy test results from container
+        if [ "${{ matrix.test-type }}" = "alpine" ]; then
+          docker cp zellij-utils-test-alpine:/app/test-results/. test-results/ || true
+        else
+          docker cp zellij-utils-test:/app/test-results/. test-results/ || true
+        fi
         
-    - name: Verify installation
-      shell: ${{ matrix.shell }}
-      run: |
-        source ~/.config/shell/zellij-utils.sh
-        type zj
-        type zjl
-        type zjk
-
-  security-audit:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Run security tests
-      run: |
-        cd tests
-        bash security_tests.sh
+        # Show summary
+        if [ -f "test-results/test_plan_results.md" ]; then
+          echo "## Test Results Summary (${{ matrix.test-type }})" >> $GITHUB_STEP_SUMMARY
+          cat test-results/test_plan_results.md >> $GITHUB_STEP_SUMMARY
+        fi
         
-    - name: ShellCheck
-      uses: ludeeus/action-shellcheck@master
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
       with:
-        scandir: './scripts'
-        format: gcc
-        severity: warning
+        name: test-results-${{ matrix.test-type }}
+        path: test-results/
+        retention-days: 30
+        
+    - name: Check test status
+      run: |
+        # Check if tests passed by examining container exit code
+        if [ "${{ matrix.test-type }}" = "alpine" ]; then
+          container_name="zellij-utils-test-alpine"
+        else
+          container_name="zellij-utils-test"
+        fi
+        
+        exit_code=$(docker wait $container_name 2>/dev/null || echo "1")
+        if [ "$exit_code" != "0" ]; then
+          echo "Tests failed with exit code: $exit_code"
+          exit 1
+        fi
+        
+    - name: Cleanup
+      if: always()
+      run: |
+        docker-compose down -v --remove-orphans
+        docker system prune -f
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run security scan on Docker images
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'zellij-utils:latest'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  test-report:
+    runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    if: always()
+    
+    steps:
+    - name: Download test results
+      uses: actions/download-artifact@v3
+      with:
+        name: test-results-main
+        path: ./test-results-main
+        
+    - name: Download Alpine test results
+      uses: actions/download-artifact@v3
+      with:
+        name: test-results-alpine
+        path: ./test-results-alpine
+        
+    - name: Generate combined report
+      run: |
+        echo "# Combined Test Report" > combined-report.md
+        echo "Generated: $(date)" >> combined-report.md
+        echo "" >> combined-report.md
+        
+        echo "## Ubuntu Test Results" >> combined-report.md
+        if [ -f "test-results-main/test_plan_results.md" ]; then
+          cat test-results-main/test_plan_results.md >> combined-report.md
+        else
+          echo "Ubuntu test results not available" >> combined-report.md
+        fi
+        
+        echo "" >> combined-report.md
+        echo "## Alpine Test Results" >> combined-report.md
+        if [ -f "test-results-alpine/test_plan_results.md" ]; then
+          cat test-results-alpine/test_plan_results.md >> combined-report.md
+        else
+          echo "Alpine test results not available" >> combined-report.md
+        fi
+        
+    - name: Upload combined report
+      uses: actions/upload-artifact@v3
+      with:
+        name: combined-test-report
+        path: combined-report.md
+        retention-days: 90

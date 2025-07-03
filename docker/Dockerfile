@@ -68,9 +68,12 @@ RUN chown -R testuser:testuser /app/zellij-utils
 USER testuser
 WORKDIR /home/testuser
 
-# Set up shell environment
+# Set up shell environment with better isolation
 RUN echo 'export EDITOR=nano' >> ~/.bashrc \
-    && echo 'export SHELL=/bin/bash' >> ~/.bashrc
+    && echo 'export SHELL=/bin/bash' >> ~/.bashrc \
+    && echo 'export ZELLIJ_CONFIG_DIR=/home/testuser/.config/zellij' >> ~/.bashrc \
+    && echo 'export ZJ_DISABLE_AUTO=1' >> ~/.bashrc \
+    && echo 'export ZJ_TEST_MODE=1' >> ~/.bashrc
 
 # Create test git configuration
 RUN git config --global user.name "Test User" \
@@ -85,5 +88,12 @@ RUN zellij --version \
 # Set working directory to project
 WORKDIR /app/zellij-utils
 
-# Default command runs the test suite
-CMD ["./docker/run_tests.sh"]
+# Add session cleanup on container start
+RUN echo '#!/bin/bash' > /usr/local/bin/cleanup-sessions.sh \
+    && echo 'pkill -f zellij 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
+    && echo 'rm -rf ~/.cache/zellij/* 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
+    && echo 'rm -rf /tmp/zellij-* 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
+    && chmod +x /usr/local/bin/cleanup-sessions.sh
+
+# Default command runs the test suite with cleanup
+CMD ["/bin/bash", "-c", "cleanup-sessions.sh && ./docker/run_tests.sh"]
