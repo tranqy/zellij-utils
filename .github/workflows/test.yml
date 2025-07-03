@@ -1,0 +1,70 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shell: [bash, zsh]
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y zsh curl
+        
+    - name: Install Zellij
+      run: |
+        curl -L https://github.com/zellij-org/zellij/releases/latest/download/zellij-x86_64-unknown-linux-musl.tar.gz | tar -xz
+        sudo mv zellij /usr/local/bin/
+        
+    - name: Set up shell
+      run: |
+        if [ "${{ matrix.shell }}" = "zsh" ]; then
+          sudo chsh -s $(which zsh) $USER
+        fi
+        
+    - name: Run tests
+      shell: ${{ matrix.shell }}
+      run: |
+        cd tests
+        bash run_all_tests.sh
+        
+    - name: Test installation
+      shell: ${{ matrix.shell }}
+      run: |
+        chmod +x scripts/install.sh
+        ./scripts/install.sh
+        
+    - name: Verify installation
+      shell: ${{ matrix.shell }}
+      run: |
+        source ~/.config/shell/zellij-utils.sh
+        type zj
+        type zjl
+        type zjk
+
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run security tests
+      run: |
+        cd tests
+        bash security_tests.sh
+        
+    - name: ShellCheck
+      uses: ludeeus/action-shellcheck@master
+      with:
+        scandir: './scripts'
+        format: gcc
+        severity: warning

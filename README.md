@@ -27,7 +27,7 @@ This workflow is ideal for:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/zellij-utils.git
+git clone https://github.com/tranqy/zellij-utils.git
 cd zellij-utils
 
 # 2. Run the installer
