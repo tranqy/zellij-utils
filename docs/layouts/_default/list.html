@@ -1,0 +1,19 @@
+{{ define "main" }}
+<h1>{{ .Title }}</h1>
+{{ .Content }}
+
+{{ if .Pages }}
+<div class="posts">
+    {{ range .Pages }}
+    <div class="post-item" style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+        <h3><a href="{{ .Permalink }}" style="color: #2c3e50; text-decoration: none;">{{ .Title }}</a></h3>
+        {{ if .Date }}
+        <div class="blog-meta">{{ .Date.Format "January 2, 2006" }}</div>
+        {{ end }}
+        <p>{{ .Summary }}</p>
+        <a href="{{ .Permalink }}" class="cta" style="font-size: 0.9em; padding: 8px 16px;">Read More</a>
+    </div>
+    {{ end }}
+</div>
+{{ end }}
+{{ end }}

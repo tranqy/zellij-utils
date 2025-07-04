@@ -1,0 +1,52 @@
+{{ define "main" }}
+<div class="hero" style="text-align: center; margin: 40px 0;">
+    <h2 style="color: #2c3e50; font-size: 2.5em; margin-bottom: 20px;">Supercharge your Zellij workflows</h2>
+    <p style="font-size: 1.2em; color: #7f8c8d; margin-bottom: 30px;">Smart session management, persistent workflows, and powerful utilities for the Zellij terminal multiplexer.</p>
+    <div>
+        <a href="https://github.com/tranqy/zellij-utils" class="cta">Get Started</a>
+        <a href="/guides/quick-start/" class="cta" style="background: #2ecc71;">Quick Start</a>
+    </div>
+</div>
+
+{{ .Content }}
+
+<div class="feature-grid">
+    <div class="feature">
+        <h3>🧠 Smart Session Management</h3>
+        <p>Automatically name sessions based on your current project, git repository, or directory. No more manual session hunting.</p>
+    </div>
+    <div class="feature">
+        <h3>🌐 Persistent & Remote Workflows</h3>
+        <p>Keep your sessions alive on remote machines for seamless disconnection/reconnection from anywhere.</p>
+    </div>
+    <div class="feature">
+        <h3>⚡ Effortless Workspaces</h3>
+        <p>Jump directly into pre-defined development layouts with editor, terminal, logs, and git tabs.</p>
+    </div>
+    <div class="feature">
+        <h3>🛡️ Safety First</h3>
+        <p>Interactive session deletion with confirmations to prevent accidental data loss.</p>
+    </div>
+</div>
+
+<div style="background: #f8f9fa; padding: 30px; border-radius: 8px; margin: 40px 0;">
+    <h3>Quick Installation</h3>
+    <pre><code># 1. Clone the repository
+git clone https://github.com/tranqy/zellij-utils.git
+cd zellij-utils
+
+# 2. Run the installer
+chmod +x scripts/install.sh
+./scripts/install.sh
+
+# 3. Add to your shell configuration
+echo 'source ~/.config/shell/zellij-utils.sh' >> ~/.bashrc
+source ~/.bashrc</code></pre>
+</div>
+
+<div style="text-align: center; margin: 40px 0;">
+    <h3>Ready to get started?</h3>
+    <a href="/guides/" class="cta">View Documentation</a>
+    <a href="/blog/" class="cta" style="background: #e74c3c;">Read the Blog</a>
+</div>
+{{ end }}

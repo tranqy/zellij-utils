@@ -1,0 +1,27 @@
+{{ define "main" }}
+<article>
+    <h1>{{ .Title }}</h1>
+    
+    {{ if .Date }}
+    <div class="blog-meta">
+        Published on {{ .Date.Format "January 2, 2006" }}
+        {{ if .Params.tags }}
+        | Tags: 
+        {{ range .Params.tags }}
+        <span style="background: #e9ecef; padding: 2px 8px; border-radius: 4px; margin: 0 4px; font-size: 0.8em;">{{ . }}</span>
+        {{ end }}
+        {{ end }}
+    </div>
+    {{ end }}
+    
+    <div class="content">
+        {{ .Content }}
+    </div>
+    
+    {{ if .Params.github }}
+    <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+        <a href="{{ .Params.github }}" class="cta">View on GitHub</a>
+    </div>
+    {{ end }}
+</article>
+{{ end }}
