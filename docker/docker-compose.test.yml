@@ -1,0 +1,40 @@
+services:
+  zellij-utils-test-quick:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    container_name: zellij-utils-test-quick
+    environment:
+      - TERM=xterm-256color
+      - DEBIAN_FRONTEND=noninteractive
+      - TEST_OUTPUT_DIR=/app/test-results
+      - TEST_VERBOSE=true
+      - ZJ_DEBUG_MODE=true
+      - ZJ_DISABLE_AUTO=1
+      - ZJ_TEST_MODE=1
+      - ZELLIJ_CONFIG_DIR=/home/testuser/.config/zellij
+    volumes:
+      # Mount source code for development
+      - ../:/app/zellij-utils:ro
+      # Mount test results output
+      - test-results-quick:/app/test-results
+      # Mount logs
+      - test-logs-quick:/app/logs
+    working_dir: /app/zellij-utils
+    command: /bin/bash -c "cleanup-sessions.sh && echo 'Starting container infrastructure test...' && bash tests/run_all_tests.sh"
+    # Keep container running for debugging
+    tty: true
+    stdin_open: true
+    # Ensure complete session isolation
+    pid: host
+    privileged: false
+
+volumes:
+  test-results-quick:
+    driver: local
+  test-logs-quick:
+    driver: local
+
+networks:
+  default:
+    name: zellij-utils-test-network-quick

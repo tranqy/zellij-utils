@@ -146,9 +146,9 @@ build_container() {
     fi
     
     if [[ "$env" == "alpine" ]]; then
-        docker-compose build $build_args --profile alpine-test "$service_name"
+        docker compose build $build_args --profile alpine-test "$service_name"
     else
-        docker-compose build $build_args "$service_name"
+        docker compose -f "$COMPOSE_FILE" build $build_args "$service_name"
     fi
     
     log_success "Container built successfully"
@@ -166,7 +166,7 @@ run_tests() {
     
     # Clean up any existing containers
     if [[ "$NO_CLEANUP" != "true" ]]; then
-        docker-compose down -v --remove-orphans 2>/dev/null || true
+        docker compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
     fi
     
     # Run tests
@@ -178,9 +178,9 @@ run_tests() {
     fi
     
     if [[ "$env" == "alpine" ]]; then
-        docker-compose --profile alpine-test up $compose_args "$service_name"
+        docker compose -f "$COMPOSE_FILE" --profile alpine-test up $compose_args "$service_name"
     else
-        docker-compose up $compose_args "$service_name"
+        docker compose -f "$COMPOSE_FILE" up $compose_args "$service_name"
     fi
     
     # Extract results if not in detached mode
@@ -209,9 +209,9 @@ start_shell() {
     
     # Start shell
     if [[ "$env" == "alpine" ]]; then
-        docker-compose --profile alpine-test run --rm "$service_name" /bin/bash
+        docker compose -f "$COMPOSE_FILE" --profile alpine-test run --rm "$service_name" /bin/bash
     else
-        docker-compose run --rm "$service_name" /bin/bash
+        docker compose -f "$COMPOSE_FILE" run --rm "$service_name" /bin/bash
     fi
 }
 
@@ -253,7 +253,7 @@ show_logs() {
     log_header "Container Logs for $env"
     
     cd "$PROJECT_ROOT"
-    docker-compose logs "$service_name"
+    docker compose -f "$COMPOSE_FILE" logs "$service_name"
 }
 
 # Show container status
@@ -263,7 +263,7 @@ show_status() {
     cd "$PROJECT_ROOT"
     
     log_info "Running containers:"
-    docker-compose ps
+    docker compose -f "$COMPOSE_FILE" ps
     
     log_info "Docker images:"
     docker images | grep zellij-utils || log_warning "No zellij-utils images found"
@@ -279,7 +279,7 @@ cleanup() {
     cd "$PROJECT_ROOT"
     
     # Stop and remove containers
-    docker-compose down -v --remove-orphans 2>/dev/null || true
+    docker compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
     
     # Remove images
     docker rmi zellij-utils-test 2>/dev/null || true

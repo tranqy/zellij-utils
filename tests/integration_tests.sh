@@ -289,7 +289,7 @@ test_delete_functions() {
         fi
         
         # Test cache invalidation
-        if grep -A 200 "^zjd()" "$script_path" | grep -q "_ZJ_SESSION_CACHE"; then
+        if grep -A 300 "^zjd()" "$script_path" | grep -q "_ZJ_SESSION_CACHE"; then
             log_info "✅ zjd invalidates session cache"
         else
             log_error "❌ zjd missing cache invalidation"

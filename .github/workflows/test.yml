@@ -41,14 +41,14 @@ jobs:
           
     - name: Build test image
       run: |
-        docker-compose build ${{ matrix.compose-service }}
+        docker compose build ${{ matrix.compose-service }}
         
     - name: Run containerized tests
       run: |
         if [ "${{ matrix.test-type }}" = "alpine" ]; then
-          docker-compose --profile alpine-test up --abort-on-container-exit ${{ matrix.compose-service }}
+          docker compose --profile alpine-test up --abort-on-container-exit ${{ matrix.compose-service }}
         else
-          docker-compose up --abort-on-container-exit ${{ matrix.compose-service }}
+          docker compose up --abort-on-container-exit ${{ matrix.compose-service }}
         fi
         
     - name: Extract test results
@@ -96,7 +96,7 @@ jobs:
     - name: Cleanup
       if: always()
       run: |
-        docker-compose down -v --remove-orphans
+        docker compose down -v --remove-orphans
         docker system prune -f
 
   security-scan:

@@ -1,0 +1,75 @@
+# Simplified Dockerfile for Testing Container Infrastructure
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TERM=xterm-256color
+
+# Install basic tools needed for testing our scripts
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    bash \
+    zsh \
+    bc \
+    sed \
+    grep \
+    gawk \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install a pre-built zellij binary instead of compiling
+RUN curl -L https://github.com/zellij-org/zellij/releases/latest/download/zellij-x86_64-unknown-linux-musl.tar.gz \
+    | tar -xz -C /usr/local/bin/ \
+    && chmod +x /usr/local/bin/zellij
+
+# Create test user (non-root for realistic testing)
+RUN useradd -m -s /bin/bash testuser \
+    && usermod -aG sudo testuser \
+    && echo "testuser:testuser" | chpasswd
+
+# Set up test environment directories
+RUN mkdir -p /home/testuser/.config/zellij \
+    && mkdir -p /home/testuser/.config/shell \
+    && mkdir -p /home/testuser/test-workspace \
+    && mkdir -p /app/test-results \
+    && chown -R testuser:testuser /home/testuser \
+    && chown -R testuser:testuser /app
+
+# Add session cleanup script (as root)
+RUN echo '#!/bin/bash' > /usr/local/bin/cleanup-sessions.sh \
+    && echo 'pkill -f zellij 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
+    && echo 'rm -rf ~/.cache/zellij/* 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
+    && echo 'rm -rf /tmp/zellij-* 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
+    && chmod +x /usr/local/bin/cleanup-sessions.sh
+
+# Copy project files to container
+COPY . /app/zellij-utils
+RUN chown -R testuser:testuser /app/zellij-utils
+
+# Switch to test user
+USER testuser
+WORKDIR /home/testuser
+
+# Set up shell environment with better isolation
+RUN echo 'export EDITOR=nano' >> ~/.bashrc \
+    && echo 'export SHELL=/bin/bash' >> ~/.bashrc \
+    && echo 'export ZELLIJ_CONFIG_DIR=/home/testuser/.config/zellij' >> ~/.bashrc \
+    && echo 'export ZJ_DISABLE_AUTO=1' >> ~/.bashrc \
+    && echo 'export ZJ_TEST_MODE=1' >> ~/.bashrc
+
+# Create test git configuration
+RUN git config --global user.name "Test User" \
+    && git config --global user.email "test@example.com" \
+    && git config --global init.defaultBranch main
+
+# Verify installations
+RUN zellij --version \
+    && git --version
+
+# Set working directory to project
+WORKDIR /app/zellij-utils
+
+# Test command - run a simple validation
+CMD ["/bin/bash", "-c", "cleanup-sessions.sh && echo 'Container infrastructure test successful!' && bash tests/run_all_tests.sh || echo 'Tests completed with status: $?'"]

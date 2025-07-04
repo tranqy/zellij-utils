@@ -248,7 +248,7 @@ test_environment_variables() {
     for var in "${test_vars[@]}"; do
         # Test that variable expansion is safe (doesn't execute commands)
         local safe_expansion="${var//\$HOME/$HOME}"
-        safe_expansion="${safe_expansion//\$USER/$USER}"
+        safe_expansion="${safe_expansion//\$USER/${USER:-testuser}}"
         
         if [[ "$safe_expansion" != *'`'* ]] && [[ "$safe_expansion" != *'$('* ]]; then
             log_info "✅ Safe expansion for: $var"
