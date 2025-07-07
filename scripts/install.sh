@@ -18,10 +18,32 @@ print_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 print_error() { echo -e "${RED}❌ $1${NC}"; }
 
 # Configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 SHELL_CONFIG_DIR="$HOME/.config/shell"
 ZELLIJ_CONFIG_DIR="$HOME/.config/zellij"
+
+# Detect if running remotely (piped from curl) or locally
+if [[ -n "${BASH_SOURCE[0]}" && -f "${BASH_SOURCE[0]}" ]]; then
+    # Running locally
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+    REMOTE_INSTALL=false
+    print_info "Running local installation from $PROJECT_DIR"
+else
+    # Running remotely
+    REMOTE_INSTALL=true
+    TEMP_DIR="$(mktemp -d)"
+    PROJECT_DIR="$TEMP_DIR/zellij-utils"
+    GITHUB_RAW_URL="https://raw.githubusercontent.com/tranqy/zellij-utils/main"
+    print_info "Running remote installation, downloading files..."
+    
+    # Cleanup function
+    cleanup() {
+        if [[ -d "$TEMP_DIR" ]]; then
+            rm -rf "$TEMP_DIR"
+        fi
+    }
+    trap cleanup EXIT
+fi
 
 print_info "Installing Zellij Utils..."
 
@@ -34,6 +56,45 @@ if ! command -v zellij >/dev/null 2>&1; then
 fi
 
 print_success "Zellij found: $(zellij --version)"
+
+# Download files if running remotely
+if [[ "$REMOTE_INSTALL" == true ]]; then
+    print_info "Downloading zellij-utils files..."
+    
+    # Create temp project structure
+    mkdir -p "$PROJECT_DIR/scripts"
+    mkdir -p "$PROJECT_DIR/layouts"
+    mkdir -p "$PROJECT_DIR/config-examples"
+    mkdir -p "$PROJECT_DIR/config"
+    
+    # Download main script
+    if ! curl -fsSL "$GITHUB_RAW_URL/scripts/zellij-utils.sh" -o "$PROJECT_DIR/scripts/zellij-utils.sh"; then
+        print_error "Failed to download zellij-utils.sh"
+        exit 1
+    fi
+    
+    # Download zsh script if it exists
+    curl -fsSL "$GITHUB_RAW_URL/scripts/zellij-utils-zsh.sh" -o "$PROJECT_DIR/scripts/zellij-utils-zsh.sh" 2>/dev/null || true
+    
+    # Download layouts
+    for layout in dev.kdl simple.kdl; do
+        if ! curl -fsSL "$GITHUB_RAW_URL/layouts/$layout" -o "$PROJECT_DIR/layouts/$layout"; then
+            print_error "Failed to download layout: $layout"
+            exit 1
+        fi
+    done
+    
+    # Download config examples
+    if ! curl -fsSL "$GITHUB_RAW_URL/config-examples/config.kdl" -o "$PROJECT_DIR/config-examples/config.kdl"; then
+        print_error "Failed to download config.kdl"
+        exit 1
+    fi
+    
+    # Download session naming config if it exists
+    curl -fsSL "$GITHUB_RAW_URL/config/session-naming.conf" -o "$PROJECT_DIR/config/session-naming.conf" 2>/dev/null || true
+    
+    print_success "Files downloaded successfully"
+fi
 
 # Create directories
 print_info "Creating configuration directories..."

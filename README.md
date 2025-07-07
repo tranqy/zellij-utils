@@ -25,6 +25,14 @@ This workflow is ideal for:
 
 ## 🚀 Installation
 
+### Quick Install (Recommended)
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/tranqy/zellij-utils/main/scripts/install.sh)
+```
+
+### Manual Install
+
 ```bash
 # 1. Clone the repository
 git clone https://github.com/tranqy/zellij-utils.git
@@ -33,12 +41,15 @@ cd zellij-utils
 # 2. Run the installer
 chmod +x scripts/install.sh
 ./scripts/install.sh
-
-# 3. Add the following line to your .bashrc or .zshrc
-source ~/.config/shell/zellij-utils.sh
 ```
 
-The installer copies the necessary files to your system. It will not overwrite existing configurations without your permission.
+The installer automatically:
+- Downloads and installs all necessary files
+- Sets up shell integration for bash/zsh
+- Copies layouts and configurations
+- Does not overwrite existing configurations without permission
+
+After installation, restart your terminal or run `source ~/.bashrc` (or `~/.zshrc` for zsh).
 
 ## ✨ Core Features
 
