@@ -35,8 +35,10 @@ Phase 1 focuses on establishing the foundational infrastructure, creating core c
 
 ### 2. Community Infrastructure Setup
 
-#### Communication Channels
-- [ ] **Set up Discord server** with structured channels:
+#### Communication Channels (Phase 2-3)
+**Note: Discord and social media moved to Phase 2-3 based on revised strategy**
+
+- [ ] **Phase 2-3: Set up Discord server** with structured channels:
   - `#welcome` - Rules, intro, server info
   - `#general` - General discussion
   - `#help` - Support questions
@@ -44,11 +46,11 @@ Phase 1 focuses on establishing the foundational infrastructure, creating core c
   - `#development` - Contributing discussion
   - `#feedback` - Feature requests and bug reports
   - Setup: Welcome bot with auto-roles, moderation tools (Carl-bot), GitHub integration
-- [ ] **Alternative: Matrix/IRC setup**
+- [ ] **Phase 2-3: Alternative: Matrix/IRC setup**
   - Matrix room: `#zellij-utils:matrix.org`
   - Bridge to IRC for broader access
   - GitHub webhook integration
-- [ ] **Social media accounts:**
+- [ ] **Phase 2-3: Social media accounts:**
   - **Twitter/X**: `@zellij_utils` - Bio: "Supercharge your Zellij terminal multiplexer workflows"
   - **Mastodon**: `@zellij_utils@fosstodon.org` - Cross-post content, engage FOSS community
   - Pin demo video, share tips and user showcases
@@ -64,7 +66,7 @@ Phase 1 focuses on establishing the foundational infrastructure, creating core c
 ### 3. Initial Content Creation
 
 #### Core Content Assets
-- [ ] **Demo video** (3-4 minutes silent screen capture):
+- [ ] **Phase 2-3: Demo video** (3-4 minutes silent screen capture):
   - **Opening screen** (5s): Project title and GitHub link
   - **Installation demo** (30s): git clone, install script, source setup
   - **Smart session management** (60s): auto-detection, listing, switching
@@ -72,7 +74,7 @@ Phase 1 focuses on establishing the foundational infrastructure, creating core c
   - **Advanced features** (45s): git integration, fuzzy finding
   - **Closing screen** (10s): Call to action with GitHub link
   - **Production specs**: 1920x1080, clean terminal theme, asciinema recording
-  - **Alternative**: Create focused GIFs for README (installation.gif, smart-sessions.gif, etc.)
+  - **Phase 1 Alternative**: Create focused GIFs for README (installation.gif, smart-sessions.gif, etc.)
 - [ ] **Launch blog post** covering:
   - Project motivation and story
   - Key features and benefits
@@ -91,18 +93,38 @@ Phase 1 focuses on establishing the foundational infrastructure, creating core c
 
 ### 4. Early Adopter Outreach
 
-#### Friendly Communities (Low-Risk Launch)
-- [ ] **Personal networks:** Share with colleagues, friends, local meetups
-- [ ] **Development communities:** Post in smaller, friendly subreddits
-  - **r/commandline** (25k members) - Tuesday 10am EST
-    - Title: "Built a collection of shell utilities to supercharge Zellij workflows"
-    - Include demo video, ask for feedback
-  - **r/zellij** (if exists) - Direct target audience
-  - **r/linux** (productivity tools welcome)
-- [ ] **Terminal enthusiast communities:**
-  - Share in Discord servers focused on terminal tools
-  - Post in relevant Slack/Matrix channels
-  - Engage with terminal productivity Twitter accounts
+#### Phase 1 Community Feedback (Revised Strategy)
+Focus on technical communities for early validation and feedback:
+
+**Reddit Communities (Primary):**
+- [ ] **r/commandline** - Active community for command line tools and utilities
+- [ ] **r/programming** - General programming community, good for technical tools
+- [ ] **r/opensource** - Specifically for open source projects
+- [ ] **r/zellij** / **r/tmux** - Terminal multiplexer specific communities
+- [ ] **r/unixporn** - Users who love customizing their terminal setups
+- [ ] **r/bashscripting** - Since the project is shell-based
+
+**Technical Communities:**
+- [ ] **Hacker News** - Has active discussions about Zellij vs tmux, very engaged audience
+- [ ] **Stack Overflow** - Unix & Linux Stack Exchange for technical questions
+- [ ] **Ask Ubuntu** - Community questions about terminal tools
+
+**Platform-Specific:**
+- [ ] **GitHub Discussions** - On the main zellij repository
+- [ ] **Zellij Discord** - Direct access to the core community
+- [ ] **Dev.to** - Developer blogging platform with engaged community
+#### Phase 1 Strategy
+**Focus on technical benefits:**
+- Smart session naming and workflow automation
+- Problem-solving approach to Zellij usability
+- Shell scripting best practices
+- Real examples with screenshots of functions in action
+
+**Recommended posting order:**
+1. Start with **r/commandline** and **r/zellij** for most targeted feedback
+2. Expand to **r/programming** and **Hacker News** once refined
+3. Use **Dev.to** for technical blog posts about the project
+
 - [ ] **Reddit post template:**
   ```
   Title: "Built a collection of shell utilities to supercharge Zellij workflows"
@@ -123,11 +145,12 @@ Phase 1 focuses on establishing the foundational infrastructure, creating core c
   Looking for feedback from the community - what features would be most useful to you?
   ```
 
-#### Content Marketing Start
-- [ ] **Publish launch blog post** on personal blog/Medium/dev.to
-- [ ] **Create "Introduction to Zellij Utils" thread** on Twitter
-- [ ] **Share demo video** on YouTube and social media
-- [ ] **Write guest post** for relevant technical blogs
+#### Content Marketing Start (Phase 1 Focus)
+- [ ] **Publish launch blog post** on dev.to (primary focus)
+- [ ] **Create technical documentation** for community posts
+- [ ] **Phase 2-3: Create "Introduction to Zellij Utils" thread** on Twitter
+- [ ] **Phase 2-3: Share demo video** on YouTube and social media
+- [ ] **Phase 2-3: Write guest post** for relevant technical blogs
 
 ### 5. Feedback Collection Systems
 
@@ -238,21 +261,22 @@ Phase 1 focuses on establishing the foundational infrastructure, creating core c
 ## Implementation Timeline
 
 ### Week 1 (Days 1-7): Foundation
-- **Day 1-2**: Script and record demo video (screen captures + GIFs)
-- **Day 3**: Set up Discord server + social media accounts (@zellij_utils)
-- **Day 4-5**: Create feedback systems (GitHub Discussions, metrics tracking)
-- **Day 6-7**: Prepare launch content, test all systems
+- **Day 1-2**: Create focused GIFs for README and community posts
+- **Day 3**: Set up GitHub Discussions and basic feedback systems
+- **Day 4-5**: Prepare technical documentation and community post content
+- **Day 6-7**: Test all systems and prepare for community launch
 
-### Week 2 (Days 8-14): Soft Launch
-- **Day 8**: Launch in r/commandline with demo video
-- **Day 9-10**: Personal network outreach (colleagues, local meetups)
+### Week 2 (Days 8-14): Community Feedback Launch
+- **Day 8**: Launch in r/commandline with technical focus
+- **Day 9**: Launch in r/zellij / r/tmux communities
+- **Day 10**: Launch in r/opensource with project story
 - **Day 11**: Publish blog post on dev.to
-- **Day 12-14**: Monitor feedback, iterate, prepare for larger launch
+- **Day 12-14**: Monitor feedback, iterate, engage with community
 
-### Week 3 (Days 15-21): Community Building
-- **Day 15-16**: Launch in r/linux (weekend post for visibility)
+### Week 3 (Days 15-21): Expand & Refine
+- **Day 15-16**: Launch in r/programming and r/bashscripting
 - **Day 17-18**: Hacker News submission (if content performing well)
-- **Day 19-21**: Metrics analysis, optimization, Phase 2 planning
+- **Day 19-21**: Metrics analysis, community feedback integration, Phase 2 planning
 
 ## Phase 1 Completion Criteria
 
@@ -267,8 +291,8 @@ Before proceeding to full public launch (Phase 2), achieve:
 ## Next Steps to Phase 2
 
 Upon successful Phase 1 completion:
-1. **Scale up content creation** (more videos, blog posts, tutorials)
-2. **Expand to larger communities** (Hacker News, larger subreddits)
+1. **Set up Discord server and social media** (Twitter, Mastodon)
+2. **Create demo videos and screencasts** for broader audience
 3. **Launch influencer outreach** program
 4. **Create partnership opportunities** with related projects
 5. **Implement advanced analytics** and conversion tracking
@@ -282,11 +306,11 @@ Upon successful Phase 1 completion:
 - **Testing Infrastructure (100%):** Containerized testing, security validation, documentation verification
 - **Legal Compliance (100%):** All required files in place and verified
 
-### 🔄 **NEXT PRIORITIES**
-1. **Content Creation:** Demo video, blog post, FAQ documentation
-2. **Community Setup:** Discord/Matrix, social media accounts
-3. **Metrics Infrastructure:** Analytics tracking, feedback systems
-4. **Soft Launch:** Reddit posts, personal network outreach
+### 🔄 **NEXT PRIORITIES** (Revised for Phase 1)
+1. **Content Creation:** GIFs for README, technical documentation, blog post
+2. **Community Setup:** GitHub Discussions, basic feedback systems
+3. **Community Launch:** Reddit posts in technical communities
+4. **Feedback Collection:** Engage with early adopters and iterate
 
 ### 📈 **Progress:** ~40% of Phase 1 complete
 **Ready for:** Content creation and community building phases

@@ -35,20 +35,52 @@ Strategic promotion across relevant channels to reach the target audience.
 
 ## 4. Marketing Channels
 
-### 4.1. Code Hosting Platforms
-*   **GitHub:** Optimize the project's GitHub page with a clear description, compelling `README.md`, and good issue templates. Leverage GitHub Releases for new versions.
+### 4.1. Phase 1: Community Feedback (Initial Launch)
+Focus on technical communities for early validation and feedback:
 
-### 4.2. Developer Communities & Forums
-*   **Reddit:** Engage in subreddits like `r/linux`, `r/commandline`, `r/terminal`, `r/opensource`, `r/selfhosted`, `r/unixporn` (for showcasing setups).
-*   **Hacker News:** Share significant updates, new features, or insightful articles about Zellij Utilities.
-*   **Stack Overflow:** Answer questions related to terminal multiplexers and subtly introduce Zellij Utilities as a solution where appropriate.
-*   **Specialized Forums:** Participate in forums or communities dedicated to shell scripting, system administration, or specific programming languages/frameworks that benefit from terminal multiplexing.
+**Reddit Communities (Primary):**
+*   **r/commandline** - Active community for command line tools and utilities
+*   **r/programming** - General programming community, good for technical tools
+*   **r/opensource** - Specifically for open source projects
+*   **r/zellij** / **r/tmux** - Terminal multiplexer specific communities
+*   **r/unixporn** - Users who love customizing their terminal setups
+*   **r/bashscripting** - Since the project is shell-based
 
-### 4.3. Blogs & Tech Publications
-*   **Guest Posts:** Offer to write guest posts for popular tech blogs or open-source publications.
-*   **Press Releases (for major milestones):** Consider sending out press releases to relevant tech news outlets for significant releases or achievements.
+**Technical Communities:**
+*   **Hacker News** - Has active discussions about Zellij vs tmux, very engaged audience
+*   **Stack Overflow** - Unix & Linux Stack Exchange for technical questions
+*   **Ask Ubuntu** - Community questions about terminal tools
 
-### 4.4. Social Media & Video Platforms
+**Platform-Specific:**
+*   **GitHub Discussions** - On the main zellij repository
+*   **Zellij Discord** - Direct access to the core community
+*   **Dev.to** - Developer blogging platform with engaged community
+
+### 4.2. Phase 1 Strategy
+**Focus on technical benefits:**
+*   Smart session naming and workflow automation
+*   Problem-solving approach to Zellij usability
+*   Shell scripting best practices
+*   Real examples with screenshots of functions in action
+
+**Recommended posting order:**
+1. Start with **r/commandline** and **r/zellij** for most targeted feedback
+2. Expand to **r/programming** and **Hacker News** once refined
+3. Use **Dev.to** for technical blog posts about the project
+
+### 4.3. Phase 2: Content & Video (Growth Phase)
+Expand to content creation after initial feedback:
+
+**Content Marketing:**
+*   **Blog Posts/Articles:** Publish articles on dev.to, Medium, or personal blogs showcasing features and comparisons
+*   **Migration Guides:** Create "tmux to zellij-utils" transition content
+*   **Video Demonstrations:** Short screencasts demonstrating key features and workflows
+*   **Before/After Productivity Comparisons:** Show concrete productivity gains with real examples
+
+### 4.4. Phase 3: Scaling & Outreach (Future)
+Once validated through community feedback:
+
+**Social Media & Video Platforms:**
 *   **Twitter/X:** Share updates, tips, and engage with the developer community. Use relevant hashtags (`#zellij`, `#terminal`, `#linux`, `#opensource`, `#devops`).
 *   **Mastodon:** Similar to Twitter, engage with the open-source and FOSS communities.
 *   **LinkedIn:** Share professional updates and articles.
@@ -56,15 +88,15 @@ Strategic promotion across relevant channels to reach the target audience.
 *   **Twitch/Live Streaming:** Live coding demonstrations showing real-world workflows.
 *   **Discord Communities:** Engage in developer-focused Discord servers where terminal users gather.
 
-### 4.5. Conferences & Meetups
+**Conferences & Meetups:**
 *   **Online/Offline Tech Events:** Present Zellij Utilities at relevant conferences, meetups, or workshops (e.g., FOSDEM, LinuxFest Northwest, local Linux user groups).
 *   **Lightning Talks:** Offer short presentations at community events.
 
-### 4.6. Direct Outreach
+**Direct Outreach:**
 *   **Influencers:** Reach out to prominent developers, YouTubers, or streamers who focus on terminal tools or productivity.
 *   **Collaborations:** Explore collaborations with other open-source projects or tool developers.
 
-### 4.7. Sponsorship & Newsletter Marketing
+**Sponsorship & Newsletter Marketing:**
 *   **Newsletter Sponsorship:** Consider sponsoring terminal/productivity-focused newsletters.
 *   **GitHub Sponsors:** Utilize GitHub's sponsorship program for sustainable funding and visibility.
 *   **Developer Tool Newsletters:** Target newsletters like Console, DevTools Weekly, or Terminal Tuesday.
