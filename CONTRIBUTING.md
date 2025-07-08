@@ -7,7 +7,7 @@ Thank you for your interest in contributing to Zellij Utils! This document provi
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/your-username/zellij-utils.git
+   git clone https://github.com/tranqy/zellij-utils.git
    cd zellij-utils
    ```
 3. **Install dependencies** (see [DEVELOPMENT.md](DEVELOPMENT.md) for detailed setup)
@@ -16,7 +16,7 @@ Thank you for your interest in contributing to Zellij Utils! This document provi
 
 ### Before You Start
 
-- Check existing [issues](https://github.com/your-username/zellij-utils/issues) to see if your idea is already being discussed
+- Check existing [issues](https://github.com/tranqy/zellij-utils/issues) to see if your idea is already being discussed
 - For major changes, please open an issue first to discuss the approach
 - Look at the [project roadmap](DEVELOPMENT.md) to understand current priorities
 
