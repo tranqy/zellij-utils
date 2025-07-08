@@ -311,10 +311,12 @@ zj_validate_full_config() {
     
     # Test sample values
     echo "Testing sample session names..." >&2
-    local test_names=("test-session" "my_project" "dev123" "invalid@name" "toolongname$(printf 'a%.0s' {1..50})")
+    local test_names=("test-session" "my_project" "dev123")
     for name in "${test_names[@]}"; do
-        if zj_validate_session_name "$name" >/dev/null 2>&1; then
+        if zj_validate_session_name "$name"; then
             _zj_log_info "Valid session name: '$name'"
+        else
+            _zj_log_error "Failed to validate test session name: '$name'"
         fi
     done
     
@@ -332,11 +334,69 @@ zj_validate_full_config() {
     fi
 }
 
+# Test validation with invalid inputs (for development/testing)
+zj_test_validation() {
+    echo "=== Testing Validation Functions ===" >&2
+    
+    local original_errors=$ZJ_VALIDATION_ERRORS
+    ZJ_VALIDATION_ERRORS=0
+    
+    echo "Testing invalid session names (should fail)..." >&2
+    local invalid_names=("invalid@name" "toolongname$(printf 'a%.0s' {1..50})" "" "current" ".")
+    local expected_failures=0
+    local actual_failures=0
+    
+    for name in "${invalid_names[@]}"; do
+        ((expected_failures++))
+        echo "Testing invalid name: '$name'" >&2
+        if ! zj_validate_session_name "$name"; then
+            ((actual_failures++))
+            echo "  ✅ Correctly rejected" >&2
+        else
+            echo "  ❌ Should have been rejected" >&2
+        fi
+    done
+    
+    echo "Testing valid session names (should pass)..." >&2
+    local valid_names=("test-session" "my_project" "dev123" "valid_name")
+    local expected_passes=0
+    local actual_passes=0
+    
+    for name in "${valid_names[@]}"; do
+        ((expected_passes++))
+        echo "Testing valid name: '$name'" >&2
+        if zj_validate_session_name "$name" >/dev/null 2>&1; then
+            ((actual_passes++))
+            echo "  ✅ Correctly accepted" >&2
+        else
+            echo "  ❌ Should have been accepted" >&2
+        fi
+    done
+    
+    echo "=== Test Results ===" >&2
+    echo "Invalid names: $actual_failures/$expected_failures correctly rejected" >&2
+    echo "Valid names: $actual_passes/$expected_passes correctly accepted" >&2
+    
+    # Restore original error count
+    ZJ_VALIDATION_ERRORS=$original_errors
+    
+    if [[ $actual_failures -eq $expected_failures && $actual_passes -eq $expected_passes ]]; then
+        echo "Validation testing PASSED" >&2
+        return 0
+    else
+        echo "Validation testing FAILED" >&2
+        return 1
+    fi
+}
+
 # Command line interface
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     case "${1:-full}" in
         "full"|"all")
             zj_validate_full_config
+            ;;
+        "test"|"test-validation")
+            zj_test_validation
             ;;
         "session")
             shift
@@ -351,8 +411,9 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
             zj_validate_layout "$@"
             ;;
         *)
-            echo "Usage: $0 [full|session <name>|path <path>|layout <layout>]" >&2
+            echo "Usage: $0 [full|test|session <name>|path <path>|layout <layout>]" >&2
             echo "  full     - Validate entire configuration (default)" >&2
+            echo "  test     - Test validation functions with invalid inputs" >&2
             echo "  session  - Validate a session name" >&2
             echo "  path     - Validate a path" >&2
             echo "  layout   - Validate a layout name" >&2
