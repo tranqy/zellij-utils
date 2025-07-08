@@ -1,7 +1,7 @@
 # Makefile for Zellij Utils
 # Provides convenient commands for development, testing, and deployment
 
-.PHONY: help install test test-docker test-alpine clean lint format docs docker-build docker-test docker-shell validate backup release
+.PHONY: help install test test-docker test-alpine clean lint format docs docker-build docker-test docker-shell validate test-validation backup release
 
 # Default target
 .DEFAULT_GOAL := help
@@ -93,6 +93,15 @@ validate:
 	fi
 	@echo "$(BLUE)Validating shell scripts...$(NC)"
 	@find scripts -name "*.sh" -exec bash -n {} \; && echo "$(GREEN)All scripts are syntactically valid$(NC)"
+
+## test-validation - Test validation functions with invalid inputs
+test-validation:
+	@echo "$(BLUE)Testing validation functions...$(NC)"
+	@if [ -f scripts/config-validator.sh ]; then \
+		bash scripts/config-validator.sh test; \
+	else \
+		echo "$(YELLOW)Config validator not found$(NC)"; \
+	fi
 
 ## lint - Run shellcheck on all shell scripts
 lint:
