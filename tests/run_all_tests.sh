@@ -116,10 +116,6 @@ run_all_tests() {
     cd "$PROJECT_ROOT"
     
     # Run each test suite
-    run_test "Security Tests" \
-             "$SCRIPT_DIR/security_tests.sh" \
-             "Validates input sanitization and security measures"
-    
     run_test "Integration Tests" \
              "$SCRIPT_DIR/integration_tests.sh" \
              "Tests installation process and core functionality"

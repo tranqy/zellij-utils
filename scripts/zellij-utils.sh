@@ -222,7 +222,7 @@ zj() {
     
     # Final length check
     if [[ ${#session_name} -gt 50 ]]; then
-        echo "Error: Session name too long (max 50 characters)" >&2
+        echo "Error: Session name too long" >&2
         return 1
     fi
     

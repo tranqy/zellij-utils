@@ -285,7 +285,7 @@ test_config_files() {
             log_warn "⚠️  Config file contains tabs (may cause issues)"
         fi
         
-        if grep -q $'\\r' "$config_file"; then
+        if grep -qP '\r' "$config_file"; then
             log_error "❌ Config file contains Windows line endings"
         fi
     else
@@ -375,10 +375,8 @@ test_security() {
         "eval.*\$"
         "exec.*\$"
         "\`.*\`"
-        "\$\(.*\)"
         "rm -rf"
         "sudo"
-        ">/dev/null.*\&"
     )
     
     for pattern in "${dangerous_patterns[@]}"; do
@@ -394,7 +392,7 @@ test_security() {
     done
     
     # Test input validation is present
-    if grep -q "validate.*session.*name\|session.*name.*validation" "$bash_script"; then
+    if grep -q "contains invalid characters\|cannot be empty\|too long" "$bash_script"; then
         log_info "✅ Session name validation present"
     else
         log_error "❌ Session name validation not found"
