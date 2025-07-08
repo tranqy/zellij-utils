@@ -1,7 +1,7 @@
 baseURL: 'https://tranqy.github.io/zellij-utils/'
 languageCode: 'en-us'
 title: 'Zellij Utils'
-# theme: 'PaperMod'
+theme: 'PaperMod'
 
 params:
   description: "Supercharge your Zellij terminal multiplexer workflows"
