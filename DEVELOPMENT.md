@@ -38,7 +38,7 @@ make test # Requires zellij to be installed locally
 
 ## 🐳 Docker Test Environment
 
-This project includes a complete Docker-based testing environment that validates all functionality in a clean, isolated container. This is the primary method for ensuring production readiness.
+This project includes a complete Docker-based testing environment that validates all functionality in a clean, isolated container. This is the primary method for ensuring production readiness and is used by our CI/CD pipeline.
 
 ### Test Commands
 
@@ -58,6 +58,18 @@ make test-clean
 # Build the Docker image without running tests
 make docker-build
 ```
+
+### CI/CD Integration
+
+The project uses GitHub Actions for automated testing with containerized test suites:
+
+- **Multi-Environment Testing**: Tests run in both Ubuntu and Alpine Linux containers
+- **Automated Testing**: Triggered on pull requests and pushes to main branch
+- **Complete Isolation**: Each test run uses fresh containers with no session interference
+- **Comprehensive Reporting**: Detailed test results and artifacts are generated
+- **Security Scanning**: Trivy integration for container security validation
+
+The CI pipeline uses the same Docker environment as local development, ensuring consistency between local testing and automated validation.
 
 ### Test Categories
 

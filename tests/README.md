@@ -152,12 +152,22 @@ This directory contains a comprehensive test suite for the Zellij Utils project,
 
 ## Continuous Integration
 
+The project uses automated testing with GitHub Actions for comprehensive CI/CD validation.
+
+### CI Pipeline Features
+- **Multi-Environment Testing**: Runs in both Ubuntu and Alpine Linux containers
+- **Automated Triggers**: Tests run on pull requests, pushes, and daily schedules
+- **Complete Isolation**: Containerized tests prevent interference with host systems
+- **Comprehensive Reporting**: Detailed test results and artifacts are generated
+- **Security Scanning**: Trivy integration for container security validation
+
+### Test Design for CI
 These tests are designed to be CI-friendly:
 - Non-interactive execution
 - Clear exit codes
 - Structured output
 - Minimal external dependencies
-- Cleanup on completion
+- Complete cleanup on completion
 
 Example CI usage:
 ```bash

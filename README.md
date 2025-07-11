@@ -59,6 +59,7 @@ The `zj` command is the heart of Zellij Utils. It intelligently creates or attac
 
 -   **In a git repository?** It uses the repo name (`my-project`).
 -   **In a project directory?** It uses the directory name (`api-server`).
+-   **In directories with dots?** It converts them to hyphens (`test.example.com` → `test-example-com`).
 -   **In your home directory?** It names the session `home`.
 
 ```bash
@@ -102,6 +103,18 @@ Zellij Utils is designed to be highly configurable. After running the installer,
 -   `session-naming.conf`: Defines the rules for how smart session naming works, including project markers (e.g., `package.json`) and custom directory mappings.
 
 For detailed configuration options, see the comments within the generated configuration files.
+
+## 🔬 Quality & Testing
+
+Zellij Utils is thoroughly tested and production-ready:
+
+- **🚀 Automated CI/CD**: GitHub Actions with containerized testing in Ubuntu and Alpine Linux
+- **🛡️ Security Testing**: Input validation, injection prevention, and dependency safety checks  
+- **🔧 Integration Testing**: Complete installation and functionality validation
+- **🌐 Compatibility Testing**: Multi-shell (Bash/Zsh) and cross-platform support
+- **📊 Performance Testing**: Caching optimization and scalability validation
+
+All tests run in isolated Docker containers to ensure consistency and prevent interference with your local environment.
 
 ## 🛠 For Developers
 

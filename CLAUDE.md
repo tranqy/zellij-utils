@@ -143,8 +143,8 @@ bash tests/run_all_tests.sh
 - **Complete Session Isolation** - No interference with local Zellij sessions
 - **Multi-Environment Testing** - Ubuntu and Alpine Linux support
 - **Comprehensive Cleanup** - Automatic session and cache cleanup
-- **CI/CD Integration** - GitHub Actions workflow for automated testing
-- **Test Result Extraction** - Detailed reports and artifacts
+- **CI/CD Integration** - GitHub Actions workflow for automated testing with Docker compose setup
+- **Test Result Extraction** - Detailed reports and artifacts from containerized tests
 - **Security Scanning** - Trivy integration for container security
 
 ### Environment Variables for Testing
