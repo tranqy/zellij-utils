@@ -213,7 +213,8 @@ zj() {
     
     # Apply transformations
     if [[ "${SANITIZE_NAMES:-false}" == true ]]; then
-        session_name=$(echo "$session_name" | tr -cd '[:alnum:]_-')
+        # Replace dots with hyphens to preserve meaningful names and prevent collisions
+        session_name=$(echo "$session_name" | tr '.' '-' | tr -cd '[:alnum:]_-')
     fi
     
     if [[ "${LOWERCASE_NAMES:-false}" == true ]]; then
