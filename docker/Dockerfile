@@ -30,17 +30,14 @@ RUN apt-get update && apt-get install -y \
     # Clean up
     && rm -rf /var/lib/apt/lists/*
 
-# Install Rust and Cargo (required for zellij)
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-
-# Install zellij from source for latest version
-RUN git clone https://github.com/zellij-org/zellij.git /tmp/zellij \
-    && cd /tmp/zellij \
-    && cargo build --release \
-    && cp target/release/zellij /usr/local/bin/ \
+# Install zellij from prebuilt binary (much faster than compiling)
+RUN ZELLIJ_VERSION="v0.42.2" \
+    && curl -L "https://github.com/zellij-org/zellij/releases/download/${ZELLIJ_VERSION}/zellij-x86_64-unknown-linux-musl.tar.gz" \
+       -o /tmp/zellij.tar.gz \
+    && tar -xzf /tmp/zellij.tar.gz -C /tmp \
+    && mv /tmp/zellij /usr/local/bin/ \
     && chmod +x /usr/local/bin/zellij \
-    && rm -rf /tmp/zellij
+    && rm -f /tmp/zellij.tar.gz
 
 # Install fzf for fuzzy finding features
 RUN git clone --depth 1 https://github.com/junegunn/fzf.git /usr/local/fzf \
@@ -59,6 +56,13 @@ RUN mkdir -p /home/testuser/.config/zellij \
     && mkdir -p /app/test-results \
     && chown -R testuser:testuser /home/testuser \
     && chown -R testuser:testuser /app
+
+# Add session cleanup script (before switching to testuser)
+RUN echo '#!/bin/bash' > /usr/local/bin/cleanup-sessions.sh \
+    && echo 'pkill -f zellij 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
+    && echo 'rm -rf ~/.cache/zellij/* 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
+    && echo 'rm -rf /tmp/zellij-* 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
+    && chmod +x /usr/local/bin/cleanup-sessions.sh
 
 # Copy project files to container
 COPY . /app/zellij-utils
@@ -87,13 +91,6 @@ RUN zellij --version \
 
 # Set working directory to project
 WORKDIR /app/zellij-utils
-
-# Add session cleanup on container start
-RUN echo '#!/bin/bash' > /usr/local/bin/cleanup-sessions.sh \
-    && echo 'pkill -f zellij 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
-    && echo 'rm -rf ~/.cache/zellij/* 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
-    && echo 'rm -rf /tmp/zellij-* 2>/dev/null || true' >> /usr/local/bin/cleanup-sessions.sh \
-    && chmod +x /usr/local/bin/cleanup-sessions.sh
 
 # Default command runs the test suite with cleanup
 CMD ["/bin/bash", "-c", "cleanup-sessions.sh && ./docker/run_tests.sh"]
