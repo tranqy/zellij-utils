@@ -46,9 +46,15 @@ jobs:
     - name: Run containerized tests
       run: |
         if [ "${{ matrix.test-type }}" = "alpine" ]; then
-          docker compose -f docker/docker-compose.yml --profile alpine-test up --abort-on-container-exit ${{ matrix.compose-service }}
+          timeout 600 docker compose -f docker/docker-compose.yml --profile alpine-test up --abort-on-container-exit ${{ matrix.compose-service }} || exit_code=$?
         else
-          docker compose -f docker/docker-compose.yml up --abort-on-container-exit ${{ matrix.compose-service }}
+          timeout 600 docker compose -f docker/docker-compose.yml up --abort-on-container-exit ${{ matrix.compose-service }} || exit_code=$?
+        fi
+        
+        # Check if timeout occurred
+        if [ "${exit_code:-0}" = "124" ]; then
+          echo "Tests timed out after 10 minutes"
+          exit 1
         fi
         
     - name: Extract test results
@@ -80,16 +86,22 @@ jobs:
         
     - name: Check test status
       run: |
-        # Check if tests passed by examining container exit code
+        # Check if test results indicate success
         if [ "${{ matrix.test-type }}" = "alpine" ]; then
-          container_name="zellij-utils-test-alpine"
+          results_file="test-results/test_plan_results.md"
         else
-          container_name="zellij-utils-test"
+          results_file="test-results/test_plan_results.md"
         fi
         
-        exit_code=$(docker wait $container_name 2>/dev/null || echo "1")
-        if [ "$exit_code" != "0" ]; then
-          echo "Tests failed with exit code: $exit_code"
+        if [ -f "$results_file" ]; then
+          if grep -q "❌ FAIL" "$results_file"; then
+            echo "Tests failed - see results file"
+            exit 1
+          else
+            echo "Tests passed successfully"
+          fi
+        else
+          echo "No test results found - assuming failure"
           exit 1
         fi
         

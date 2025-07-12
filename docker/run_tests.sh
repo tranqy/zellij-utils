@@ -69,22 +69,14 @@ setup_test_environment() {
     export ZJ_DISABLE_AUTO=1
     export ZJ_TEST_MODE=1
     
-    # Comprehensive session cleanup for complete isolation
+    # Minimal session cleanup for CI
     log_info "Cleaning up any existing zellij sessions..."
     pkill -f zellij 2>/dev/null || true
-    pkill -f "zellij.*" 2>/dev/null || true
-    sleep 3
+    sleep 1
     
-    # Clean zellij cache and temporary files
+    # Clean basic temporary files
     rm -rf ~/.cache/zellij/* 2>/dev/null || true
     rm -rf /tmp/zellij-* 2>/dev/null || true
-    rm -rf /tmp/*zellij* 2>/dev/null || true
-    
-    # Ensure clean socket directory
-    rm -rf /tmp/zellij-$(id -u)/ 2>/dev/null || true
-    
-    # Wait for complete cleanup
-    sleep 2
     
     # Verify required tools
     check_dependencies

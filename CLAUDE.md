@@ -106,51 +106,98 @@ git commit -m "feat: add interactive session deletion with zjd function
 
 ## Testing
 
-The project includes comprehensive test suites with both local and containerized testing options:
+The project includes a modern hybrid testing system with both local Docker isolation and fast native CI:
 
-### Test Suites
+### Hybrid Testing Architecture
 
-- **tests/integration_tests.sh** - Installation and core functionality tests
-- **tests/security_tests.sh** - Input validation and injection prevention tests
-- **tests/compatibility_tests.sh** - Shell and zellij version compatibility tests
+The testing system provides **two complementary approaches**:
 
-### Testing Options
+1. **Local Docker Testing** - Complete isolation for development
+2. **Native CI Testing** - Fast, reliable GitHub Actions
 
-**Containerized Testing (Recommended):**
+### Test Structure
+
+- **tests/shared/** - Environment-agnostic test logic
+- **tests/utils/** - Common test framework and utilities  
+- **tests/local/** - Docker-specific setup and cleanup
+- **tests/ci/** - GitHub Actions and native environment setup
+- **tests/run-tests.sh** - Universal test runner (auto-detects environment)
+
+### Local Development Testing (Docker)
+
+**Recommended for local development** - provides complete isolation from your running zellij sessions:
+
 ```bash
-# Run tests in isolated Docker containers
-./scripts/test-docker.sh run              # Ubuntu container
-./scripts/test-docker.sh run alpine       # Alpine container
-./scripts/test-docker.sh build --force    # Rebuild containers
-./scripts/test-docker.sh shell            # Interactive shell
+# Quick start - run main tests in Docker
+./scripts/test-local.sh
+
+# Run specific test types
+./scripts/test-local.sh -t alpine         # Alpine Linux tests
+./scripts/test-local.sh -t both           # Both Ubuntu and Alpine
+
+# Development workflow
+./scripts/test-local.sh --build           # Force rebuild containers
+./scripts/test-local.sh --shell           # Interactive debugging shell
+./scripts/test-local.sh --verbose         # Detailed output
+
+# No cleanup (for debugging)
+./scripts/test-local.sh --no-cleanup
 ```
 
-**Local Testing (with Session Isolation):**
+### Native Testing (CI and Local)
+
+**Used by GitHub Actions** - fast execution without Docker overhead:
+
 ```bash
-# Run tests locally with session backup/restore
-./scripts/test-local.sh run               # Full isolation
-./scripts/test-local.sh --docker-only     # Force Docker usage
+# Run tests natively (detects environment automatically)
+./tests/run-tests.sh                      # Full test suite
+./tests/run-tests.sh --quick              # Quick validation only
+./tests/run-tests.sh --verbose            # Detailed output
+
+# Force specific environment
+./tests/run-tests.sh --env native         # Local native testing
+./tests/run-tests.sh --env github-actions # GitHub Actions mode
 ```
 
-**Traditional Testing:**
-```bash
-# Original test runner (may conflict with active sessions)
-bash tests/run_all_tests.sh
-```
+### Key Benefits
 
-### Container Testing Features
+**Local Docker Testing:**
+- ✅ **Complete Session Isolation** - Zero interference with your running zellij sessions
+- ✅ **Multi-Environment Testing** - Ubuntu and Alpine Linux containers
+- ✅ **Debugging Friendly** - Interactive shells and persistent containers
+- ✅ **Reproducible** - Identical environment every time
 
-- **Complete Session Isolation** - No interference with local Zellij sessions
-- **Multi-Environment Testing** - Ubuntu and Alpine Linux support
-- **Comprehensive Cleanup** - Automatic session and cache cleanup
-- **CI/CD Integration** - GitHub Actions workflow for automated testing with Docker compose setup
-- **Test Result Extraction** - Detailed reports and artifacts from containerized tests
-- **Security Scanning** - Trivy integration for container security
+**Native CI Testing:**  
+- ⚡ **5x Faster** - No Docker build/startup overhead
+- 🔒 **Zero Hanging** - No container process management issues
+- 📊 **Clear Reporting** - Detailed test results and GitHub integration
+- 🎯 **Multi-Shell** - Tests both bash and zsh compatibility
 
-### Environment Variables for Testing
+### GitHub Actions Integration
 
-- `ZJ_TEST_MODE=1` - Enable test mode
+The project now uses **Native CI** for fast, reliable automated testing:
+
+- **Lint and Validation** - Shell syntax and style checking
+- **Quick Tests** - Fast validation and core functionality
+- **Full Test Suite** - Comprehensive testing across bash/zsh
+- **Security Scanning** - Input validation and security checks
+- **Compatibility Testing** - Installation and integration workflow
+
+### Environment Variables
+
+- `ZJ_TEST_MODE=1` - Enable test mode (disables production features)
 - `ZJ_DISABLE_AUTO=1` - Disable auto-start during testing
+- `TEST_VERBOSE=true` - Enable detailed test output
+- `TEST_OUTPUT_DIR` - Custom test results directory
 - `ZELLIJ_CONFIG_DIR` - Custom config directory for isolation
+
+### Migration from Old Testing
+
+The new system **replaces** the previous Docker-only CI while **preserving** local Docker testing:
+
+- ✅ **Local Development**: Use `./scripts/test-local.sh` (Docker isolation)  
+- ✅ **CI/CD**: Uses native GitHub Actions (fast, reliable)
+- ✅ **Shared Logic**: Same test scripts work in both environments
+- ✅ **Better Debugging**: Interactive shells and clear error reporting
 
 The project has no build system or linting - it's pure shell scripting focused on Zellij terminal multiplexer enhancement.

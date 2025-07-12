@@ -21,13 +21,13 @@ services:
       # Mount logs
       - test-logs:/app/logs
     working_dir: /app/zellij-utils
-    command: /bin/bash -c "cleanup-sessions.sh && ./docker/run_tests.sh"
+    command: /bin/bash -c "cleanup-sessions.sh && ./tests/run-tests.sh --env docker"
     # Keep container running for debugging
     tty: true
     stdin_open: true
-    # Ensure complete session isolation
-    pid: host
+    # Isolation suitable for local development
     privileged: false
+    # Note: pid: host removed to prevent CI hanging issues
     
   # Additional test environment for compatibility testing
   zellij-utils-test-alpine:
@@ -46,12 +46,12 @@ services:
       - ../:/app/zellij-utils:ro
       - test-results-alpine:/app/test-results
     working_dir: /app/zellij-utils
-    command: /bin/bash -c "cleanup-sessions.sh && ./docker/run_tests.sh"
+    command: /bin/bash -c "cleanup-sessions.sh && ./tests/run-tests.sh --env docker"
     profiles:
       - alpine-test
-    # Ensure complete session isolation
-    pid: host
+    # Isolation suitable for local development
     privileged: false
+    # Note: pid: host removed to prevent CI hanging issues
 
 volumes:
   test-results:
