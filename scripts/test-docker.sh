@@ -146,7 +146,7 @@ build_container() {
     fi
     
     if [[ "$env" == "alpine" ]]; then
-        docker compose build $build_args --profile alpine-test "$service_name"
+        docker compose -f "$COMPOSE_FILE" --profile alpine-test build $build_args "$service_name"
     else
         docker compose -f "$COMPOSE_FILE" build $build_args "$service_name"
     fi

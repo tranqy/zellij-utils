@@ -12,8 +12,10 @@ RUN apk add --no-cache \
     # Build tools
     build-base \
     pkgconfig \
-    # Required for zellij
+    musl-dev \
+    # Required for zellij and OpenSSL compilation
     openssl-dev \
+    perl \
     # Test utilities
     bc \
     inotify-tools \
