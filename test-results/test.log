@@ -1,8 +1,9 @@
-Zellij Utils Test Execution Log - 2025-07-13 07:33:44
+Zellij Utils Test Execution Log - 2025-07-13 07:55:38
 Environment: github-actions
-Test Suite: quick
+Test Suite: full
 ----------------------------------------
-[0;34m[INFO][0m Running quick test suite
+[0;34m[INFO][0m Running full test suite
+[0;34m[INFO][0m Starting shared test execution
 [0;34m[INFO][0m Setting up test environment: native
 [0;34m[INFO][0m Setting up native test environment
 [0;34m[INFO][0m Native: Cleaning test-specific sessions
@@ -23,14 +24,51 @@ Test Suite: quick
 [0;32m[SUCCESS][0m ✓ Config: Main script loading
 [0;34m[INFO][0m Running test: Config: Core functions available
 [0;32m[SUCCESS][0m ✓ Config: Core functions available
+[0;34m[INFO][0m === Running Session Management Tests ===
+[0;34m[INFO][0m Running test: Session: Zellij version check
+[0;32m[SUCCESS][0m ✓ Session: Zellij version check
+[1;33m[WARNING][0m Skipping session creation test in GitHub Actions (no TTY available)
+[0;34m[INFO][0m Running test: Session: Session listing
+[0;32m[SUCCESS][0m ✓ Session: Session listing
+[0;34m[INFO][0m Running test: Session: Session termination
+[0;32m[SUCCESS][0m ✓ Session: Session termination
+[0;34m[INFO][0m === Running Integration Tests ===
+[0;34m[INFO][0m Running test: Integration: Bash compatibility
+[0;32m[SUCCESS][0m ✓ Integration: Bash compatibility
+[1;33m[WARNING][0m Skipping zsh compatibility test (zsh not available)
+[0;34m[INFO][0m Running test: Integration: Git repository detection
+[0;32m[SUCCESS][0m ✓ Integration: Git repository detection
+[0;34m[INFO][0m === Running Security Tests ===
+[0;34m[INFO][0m Running test: Security: No hardcoded secrets
+[0;32m[SUCCESS][0m ✓ Security: No hardcoded secrets
+[0;34m[INFO][0m Running test: Security: No rm -rf /
+[0;32m[SUCCESS][0m ✓ Security: No rm -rf /
+[0;34m[INFO][0m Running test: Security: No dangerous eval
+[0;32m[SUCCESS][0m ✓ Security: No dangerous eval
+[0;34m[INFO][0m === Running Performance Tests ===
+[0;34m[INFO][0m Running test: Performance: Script loading speed
+[0;32m[SUCCESS][0m ✓ Performance: Script loading speed
+[0;34m[INFO][0m Generating test results report...
+[0;32m[SUCCESS][0m Test report generated: /home/tranqy/projects/zellij-utils/test-results/test_results.md
+[0;34m[INFO][0m Cleaning up test environment: native
+[0;34m[INFO][0m Native: Cleanup test environment
+[0;34m[INFO][0m Native cleanup complete
+[0;34m[INFO][0m Cleanup complete
+[0;34m[INFO][0m === Test Execution Complete ===
+[0;34m[INFO][0m Environment: native
+[0;34m[INFO][0m Total Tests: 14
+[0;34m[INFO][0m Passed: 14
+[0;34m[INFO][0m Failed: 0
+[0;34m[INFO][0m Skipped: 2
+[0;32m[SUCCESS][0m 🎉 All tests passed!
 [0;34m[INFO][0m Generating test results report...
 [0;32m[SUCCESS][0m Test report generated: /home/tranqy/projects/zellij-utils/test-results/test_results.md
 [0;34m[INFO][0m === Test Execution Complete ===
 [0;34m[INFO][0m Environment: native
-[0;34m[INFO][0m Total Tests: 5
-[0;34m[INFO][0m Passed: 5
+[0;34m[INFO][0m Total Tests: 14
+[0;34m[INFO][0m Passed: 14
 [0;34m[INFO][0m Failed: 0
-[0;34m[INFO][0m Skipped: 0
+[0;34m[INFO][0m Skipped: 2
 [0;32m[SUCCESS][0m 🎉 All tests passed!
 [0;34m[INFO][0m Cleaning up test environment: native
 [0;34m[INFO][0m Native: Cleanup test environment
