@@ -1,5 +1,5 @@
-Zellij Utils Test Execution Log - 2025-07-13 07:16:55
-Environment: native
+Zellij Utils Test Execution Log - 2025-07-13 07:33:44
+Environment: github-actions
 Test Suite: quick
 ----------------------------------------
 [0;34m[INFO][0m Running quick test suite
@@ -12,6 +12,26 @@ Test Suite: quick
 [0;34m[INFO][0m Zellij version: zellij 0.42.2
 [0;32m[SUCCESS][0m All dependencies available
 [0;34m[INFO][0m === Running Script Validation Tests ===
+[0;34m[INFO][0m Running test: Validation: Install script syntax
+[0;32m[SUCCESS][0m ✓ Validation: Install script syntax
+[0;34m[INFO][0m Running test: Validation: Main script syntax
+[0;32m[SUCCESS][0m ✓ Validation: Main script syntax
+[0;34m[INFO][0m Running test: Validation: Layout files exist
+[0;32m[SUCCESS][0m ✓ Validation: Layout files exist
+[0;34m[INFO][0m === Running Configuration System Tests ===
+[0;34m[INFO][0m Running test: Config: Main script loading
+[0;32m[SUCCESS][0m ✓ Config: Main script loading
+[0;34m[INFO][0m Running test: Config: Core functions available
+[0;32m[SUCCESS][0m ✓ Config: Core functions available
+[0;34m[INFO][0m Generating test results report...
+[0;32m[SUCCESS][0m Test report generated: /home/tranqy/projects/zellij-utils/test-results/test_results.md
+[0;34m[INFO][0m === Test Execution Complete ===
+[0;34m[INFO][0m Environment: native
+[0;34m[INFO][0m Total Tests: 5
+[0;34m[INFO][0m Passed: 5
+[0;34m[INFO][0m Failed: 0
+[0;34m[INFO][0m Skipped: 0
+[0;32m[SUCCESS][0m 🎉 All tests passed!
 [0;34m[INFO][0m Cleaning up test environment: native
 [0;34m[INFO][0m Native: Cleanup test environment
 [0;34m[INFO][0m Native cleanup complete

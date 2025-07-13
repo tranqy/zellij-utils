@@ -54,6 +54,14 @@ setup_test_environment() {
     export ZJ_TEST_MODE=1
     export TEST_OUTPUT_DIR="${TEST_OUTPUT_DIR:-$(pwd)/test-results}"
     
+    # Initialize test counters explicitly
+    TOTAL_TESTS=0
+    PASSED_TESTS=0  
+    FAILED_TESTS=0
+    SKIPPED_TESTS=0
+    FAILED_TEST_NAMES=()
+    TEST_RESULTS=()
+    
     # Create output directories
     mkdir -p "$TEST_OUTPUT_DIR/logs"
     mkdir -p "$TEST_OUTPUT_DIR/artifacts"
@@ -81,7 +89,7 @@ run_test() {
     local test_category="${3:-general}"
     local test_timeout="${4:-60}"
     
-    ((TOTAL_TESTS++))
+    TOTAL_TESTS=$((TOTAL_TESTS + 1))
     
     log_info "Running test: $test_name"
     
@@ -89,22 +97,26 @@ run_test() {
     local test_log="$TEST_OUTPUT_DIR/logs/${test_category}_${TOTAL_TESTS}.log"
     local test_result="UNKNOWN"
     
-    # Run test with timeout
-    if timeout "$test_timeout" bash -c "$test_command" >"$test_log" 2>&1; then
+    # Run test with timeout (disable set -e for this test execution)
+    set +e  # Temporarily disable set -e for test execution
+    timeout "$test_timeout" bash -c "$test_command" >"$test_log" 2>&1
+    local test_exit_code=$?
+    set -e  # Re-enable set -e
+    
+    if [[ $test_exit_code -eq 0 ]]; then
         test_result="PASS"
-        ((PASSED_TESTS++))
+        PASSED_TESTS=$((PASSED_TESTS + 1))
         log_success "✓ $test_name"
     else
-        local exit_code=$?
         test_result="FAIL"
-        ((FAILED_TESTS++))
+        FAILED_TESTS=$((FAILED_TESTS + 1))
         FAILED_TEST_NAMES+=("$test_name")
         
-        if [[ $exit_code -eq 124 ]]; then
+        if [[ $test_exit_code -eq 124 ]]; then
             log_error "✗ $test_name (TIMEOUT after ${test_timeout}s)"
             test_result="TIMEOUT"
         else
-            log_error "✗ $test_name (EXIT CODE: $exit_code)"
+            log_error "✗ $test_name (EXIT CODE: $test_exit_code)"
         fi
         
         # Show error details if verbose

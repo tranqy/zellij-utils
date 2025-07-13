@@ -124,7 +124,10 @@ main() {
     echo "----------------------------------------" >> "$TEST_OUTPUT_DIR/test.log"
     
     # Source and run the shared tests
-    source "$SCRIPT_DIR/shared/core-tests.sh"
+    if ! source "$SCRIPT_DIR/shared/core-tests.sh"; then
+        echo "ERROR: Failed to source shared tests"
+        exit 1
+    fi
     
     # Set up signal handlers
     trap 'cleanup_test_environment; exit 130' INT TERM
