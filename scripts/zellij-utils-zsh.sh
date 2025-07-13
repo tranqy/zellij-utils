@@ -410,8 +410,10 @@ _zellij_sessions() {
     _describe 'sessions' sessions
 }
 
-# Register completions
-compdef _zellij_sessions zjs zjk
+# Register completions (only if compdef is available)
+if command -v compdef >/dev/null 2>&1; then
+    compdef _zellij_sessions zjs zjk
+fi
 
 # =============================================================================
 # INITIALIZATION
