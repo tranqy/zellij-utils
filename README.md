@@ -120,6 +120,15 @@ All tests run in isolated Docker containers to ensure consistency and prevent in
 
 Interested in contributing or understanding the technical details? Please see the [**Local Development and Testing Guide**](DEVELOPMENT.md).
 
+## 📢 Marketing & Community
+
+This project includes comprehensive marketing materials and community engagement strategy. See the [**marketing/**](marketing/) directory for:
+
+- Ready-to-publish blog posts and articles
+- Community-specific post templates 
+- Launch strategy and success metrics
+- Community engagement guidelines
+
 ## 📜 License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
