@@ -92,6 +92,9 @@ fi
 main() {
     local env=$(detect_environment)
     
+    # Export environment for test logic
+    export ZJ_CI_ENV="$env"
+    
     # Safety warning for native environment
     if [[ "$env" == "native" ]] && [[ -z "${FORCE_NATIVE:-}" ]]; then
         echo "⚠️  WARNING: Running tests in native environment!"

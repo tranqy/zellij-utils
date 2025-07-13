@@ -32,9 +32,18 @@ run_session_tests() {
         "session" 10
     
     # Test 2: Session creation (detached)
-    run_test "Session: Detached session creation" \
-        "timeout 30 zellij -d -s test-session-ci" \
-        "session" 45
+    # IMPORTANT: Skip this test in GitHub Actions due to TTY limitation
+    # GitHub Actions doesn't provide a TTY, causing zellij to fail with ENOTTY
+    # This test works fine in local Docker testing where TTY is available
+    # DO NOT remove this logic - it prevents false CI failures
+    if [[ "${GITHUB_ACTIONS:-}" == "true" ]] || [[ "${ZJ_CI_ENV:-}" == "github-actions" ]]; then
+        log_warning "Skipping session creation test in GitHub Actions (no TTY available)"
+        SKIPPED_TESTS=$((SKIPPED_TESTS + 1))
+    else
+        run_test "Session: Detached session creation" \
+            "timeout 30 zellij -d -s test-session-ci" \
+            "session" 45
+    fi
     
     # Test 3: Session listing
     run_test "Session: Session listing" \
@@ -83,7 +92,7 @@ run_integration_tests() {
             "integration" 20
     else
         log_warning "Skipping zsh compatibility test (zsh not available)"
-        ((SKIPPED_TESTS++))
+        SKIPPED_TESTS=$((SKIPPED_TESTS + 1))
     fi
     
     # Test 3: Git integration (if in git repo)
@@ -93,7 +102,7 @@ run_integration_tests() {
             "integration" 15
     else
         log_warning "Skipping git integration test (not in git repo)"
-        ((SKIPPED_TESTS++))
+        SKIPPED_TESTS=$((SKIPPED_TESTS + 1))
     fi
 }
 
