@@ -1,9 +1,8 @@
-Zellij Utils Test Execution Log - 2025-07-12 11:40:22
+Zellij Utils Test Execution Log - 2025-07-13 07:16:55
 Environment: native
-Test Suite: full
+Test Suite: quick
 ----------------------------------------
-[0;34m[INFO][0m Running full test suite
-[0;34m[INFO][0m Starting shared test execution
+[0;34m[INFO][0m Running quick test suite
 [0;34m[INFO][0m Setting up test environment: native
 [0;34m[INFO][0m Setting up native test environment
 [0;34m[INFO][0m Native: Cleaning test-specific sessions

@@ -3,11 +3,11 @@
 
 echo "=== Zellij Utils Manual Test Run ==="
 echo "Date: $(date)"
-echo "Environment: $(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)"
+echo "Environment: $(grep PRETTY_NAME /etc/os-release | cut -d'"' -f2)"
 echo "Zellij: $(zellij --version)"
 echo ""
 
-cd /app/zellij-utils
+cd /app/zellij-utils || exit 1
 
 # Test counters
 total_tests=0

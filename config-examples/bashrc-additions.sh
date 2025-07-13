@@ -1,3 +1,4 @@
+#!/bin/bash
 # Zellij Environment Setup
 # Add these lines to your ~/.bashrc or ~/.zshrc
 

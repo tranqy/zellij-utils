@@ -143,7 +143,8 @@ check_dependencies() {
     fi
     
     # Check zellij version
-    local zellij_version="$(zellij --version)"
+    local zellij_version
+    zellij_version="$(zellij --version)"
     log_info "Zellij version: $zellij_version"
     
     log_success "All dependencies available"
