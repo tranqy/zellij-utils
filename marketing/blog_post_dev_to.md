@@ -1,16 +1,16 @@
-# I Got Tired of Terminal Session Hell, So I Fixed It
+# I Added Smart Automation to My Zellij Workflow
 
 *Tags: #zellij #terminal #productivity #shell #opensource*
 
-## Terminal multiplexers are broken
+## Terminal multiplexers are amazing, but...
 
-You know the pain:
+The friction was killing me:
 - Spend 5 minutes naming sessions 🙄
 - "Was it `my-app` or `myapp`?" every. single. time.
 - Manually set up the same 4-pane layout daily
-- Lose everything when SSH drops
+- Lose flow setting up what should be automatic
 
-I was wasting more time managing [Zellij](https://github.com/zellij-org/zellij) than actually coding.
+[Zellij](https://github.com/zellij-org/zellij) is incredible, but I needed some automation to actually *use* it consistently.
 
 ## So I automated the annoying parts
 
