@@ -134,13 +134,51 @@ else
     print_info "Session naming config not found, skipping..."
 fi
 
-# Copy config if it doesn't exist
-if [[ ! -f "$ZELLIJ_CONFIG_DIR/config.kdl" ]]; then
+# Handle zellij configuration
+CONFIG_EXISTS=false
+if [[ -f "$ZELLIJ_CONFIG_DIR/config.kdl" ]]; then
+    CONFIG_EXISTS=true
+    print_warning "Zellij config already exists at $ZELLIJ_CONFIG_DIR/config.kdl"
+else
     print_info "Installing default zellij config..."
     cp "$PROJECT_DIR/config-examples/config.kdl" "$ZELLIJ_CONFIG_DIR/"
     print_success "Config installed to $ZELLIJ_CONFIG_DIR/config.kdl"
+fi
+
+# Ask about session serialization (resurrection behavior)
+echo ""
+print_info "Zellij Session Resurrection Configuration"
+echo "By default, Zellij remembers and restarts programs from previous sessions."
+echo "This can be confusing if you expect a fresh start each time."
+echo ""
+echo "Would you like to disable session resurrection? [y/N]"
+read -r DISABLE_RESURRECTION
+
+if [[ "$DISABLE_RESURRECTION" =~ ^[Yy]$ ]]; then
+    print_info "Disabling session serialization..."
+    
+    # Add or update the session_serialization setting
+    if grep -q "session_serialization" "$ZELLIJ_CONFIG_DIR/config.kdl"; then
+        # Update existing setting
+        sed -i 's/session_serialization true/session_serialization false/' "$ZELLIJ_CONFIG_DIR/config.kdl"
+        sed -i 's/session_serialization false/session_serialization false/' "$ZELLIJ_CONFIG_DIR/config.kdl"
+    else
+        # Add new setting at the top of the file after any comments
+        sed -i '1a\\nsession_serialization false' "$ZELLIJ_CONFIG_DIR/config.kdl"
+    fi
+    
+    print_success "Session resurrection disabled - Zellij will start fresh each time"
 else
-    print_warning "Zellij config already exists, skipping..."
+    print_info "Keeping default behavior - sessions will resurrect previous programs"
+    
+    # Ensure session_serialization is enabled (default behavior)
+    if grep -q "session_serialization false" "$ZELLIJ_CONFIG_DIR/config.kdl"; then
+        sed -i 's/session_serialization false/session_serialization true/' "$ZELLIJ_CONFIG_DIR/config.kdl"
+        print_info "Re-enabled session resurrection in existing config"
+    fi
+fi
+
+if [[ "$CONFIG_EXISTS" == true ]]; then
     print_info "Example config available at: $PROJECT_DIR/config-examples/config.kdl"
 fi
 
